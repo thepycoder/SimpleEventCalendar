@@ -31,7 +31,18 @@
     {#if event.extendedProps?.description}
       <div class="event-description">
         <strong>Description:</strong>
-        {event.extendedProps.description}
+        <p>{event.extendedProps.description}</p>
+      </div>
+    {/if}
+
+    {#if event.extendedProps?.attendees}
+      <div class="event-attendees">
+        <strong>Attendees:</strong>
+        <ul>
+          {#each event.extendedProps.attendees as attendee}
+            <li>{attendee}</li>
+          {/each}
+        </ul>
       </div>
     {/if}
   </div>
@@ -77,7 +88,22 @@
 
   .event-time,
   .event-location,
-  .event-description {
+  .event-description,
+  .event-attendees {
     margin-bottom: 15px;
+  }
+
+  .event-description p {
+    margin: 5px 0;
+  }
+
+  ul {
+    list-style-type: none;
+    padding-left: 0;
+    margin: 5px 0;
+  }
+
+  li {
+    padding: 3px 0;
   }
 </style>
