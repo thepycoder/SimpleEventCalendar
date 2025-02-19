@@ -1,13 +1,21 @@
-<script>
+<script lang="ts">
+  import { onMount } from "svelte";
   import Calendar from "@event-calendar/core";
+  import { currentUser, login, logout } from "$lib/stores/auth";
   import TimeGrid from "@event-calendar/time-grid";
   import DayGrid from "@event-calendar/day-grid";
   import List from "@event-calendar/list";
   import EventModal from "$lib/components/EventModal.svelte";
-  import { onMount } from "svelte";
+  import EventForm from "$lib/components/EventForm.svelte";
+  import type {
+    CalendarEvent,
+    EventClickInfo,
+    EventContentArg,
+  } from "$lib/types/calendar";
+  import type { EventCalendarOptions } from "@event-calendar/core";
 
   // Custom event renderers
-  function renderEvent(info) {
+  function renderEvent(info: EventContentArg) {
     const attendeeCount = info.event.extendedProps?.attendees?.length || 0;
     return {
       html: `
@@ -19,7 +27,7 @@
     };
   }
 
-  function renderListEvent(info) {
+  function renderListEvent(info: EventContentArg) {
     const attendees = info.event.extendedProps?.attendees || [];
     return {
       html: `
@@ -42,7 +50,8 @@
 
   // Calendar setup
   const plugins = [TimeGrid, DayGrid, List];
-  let options = {
+
+  let options: EventCalendarOptions = {
     view: "timeGridWeek",
     views: {
       dayGridMonth: {
@@ -132,10 +141,45 @@
 
   // Modal state
   let showModal = false;
-  let selectedEvent = null;
+  let showEventForm = false;
+  let selectedEvent: CalendarEvent | null = null;
+  let isEditMode = false;
+
+  // Event form handlers
+  function handleCreateEvent() {
+    isEditMode = false;
+    showEventForm = true;
+  }
+
+  function handleEditEvent(event: CalendarEvent) {
+    selectedEvent = event;
+    isEditMode = true;
+    showEventForm = true;
+  }
+
+  function handleSaveEvent(event: CustomEvent) {
+    const eventData = event.detail.event;
+
+    if (isEditMode && selectedEvent) {
+      // Update existing event
+      options.events = options.events.map((e) =>
+        e.id === selectedEvent.id ? { ...eventData, id: selectedEvent.id } : e
+      );
+    } else {
+      // Create new event
+      const newEvent = {
+        ...eventData,
+        id: crypto.randomUUID(),
+      };
+      options.events = [...options.events, newEvent];
+    }
+
+    showEventForm = false;
+    selectedEvent = null;
+  }
 
   // Handle event clicks
-  function handleEventClick(info) {
+  function handleEventClick(info: EventClickInfo) {
     selectedEvent = info.event;
     showModal = true;
   }
@@ -144,6 +188,18 @@
 </script>
 
 <main>
+  <div class="header">
+    {#if $currentUser}
+      <div class="user-info">
+        Welcome, {$currentUser.name}
+        <button on:click={logout}>Logout</button>
+      </div>
+      <button on:click={handleCreateEvent}>Create Event</button>
+    {:else}
+      <button on:click={login}>Login</button>
+    {/if}
+  </div>
+
   <Calendar {plugins} {options} />
 
   {#if showModal && selectedEvent}
@@ -153,11 +209,75 @@
         showModal = false;
         selectedEvent = null;
       }}
+      onEdit={handleEditEvent}
     />
+  {/if}
+
+  {#if showEventForm}
+    <div class="modal-backdrop">
+      <div class="modal-content">
+        <EventForm
+          event={selectedEvent || undefined}
+          isEdit={isEditMode}
+          on:save={handleSaveEvent}
+          on:cancel={() => {
+            showEventForm = false;
+            selectedEvent = null;
+          }}
+        />
+      </div>
+    </div>
   {/if}
 </main>
 
 <style>
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #f5f5f5;
+    margin-bottom: 1rem;
+  }
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    background-color: #4caf50;
+    color: white;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background-color: #45a049;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 8px;
+    max-width: 600px;
+    width: 90%;
+  }
   :global(.event-content) {
     padding: 2px 4px;
     overflow: hidden;

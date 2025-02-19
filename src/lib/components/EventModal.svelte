@@ -1,6 +1,10 @@
-<script>
-  export let event;
-  export let onClose;
+<script lang="ts">
+  import type { CalendarEvent } from '$lib/types/calendar';
+  import { currentUser } from '$lib/stores/auth';
+
+  export let event: CalendarEvent;
+  export let onClose: () => void;
+  export let onEdit: (event: CalendarEvent) => void;
 
   function handleOutsideClick(e) {
     if (e.target === e.currentTarget) {
@@ -11,7 +15,12 @@
 
 <div class="modal-backdrop" on:click={handleOutsideClick}>
   <div class="modal">
-    <button class="close-button" on:click={onClose}>&times;</button>
+    <div class="modal-buttons">
+      {#if $currentUser}
+        <button class="edit-button" on:click={() => onEdit(event)}>Edit</button>
+      {/if}
+      <button class="close-button" on:click={onClose}>&times;</button>
+    </div>
     
     <h2>{event.title}</h2>
     
@@ -71,10 +80,15 @@
     position: relative;
   }
 
-  .close-button {
+  .modal-buttons {
     position: absolute;
     top: 10px;
     right: 10px;
+    display: flex;
+    gap: 10px;
+  }
+
+  .close-button, .edit-button {
     border: none;
     background: none;
     font-size: 24px;
