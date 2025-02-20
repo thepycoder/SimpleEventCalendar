@@ -16,26 +16,48 @@ export interface Profile {
 // Admin authentication state
 export const currentUser = writable<User | null>(null);
 
+// Cookie helper functions
+function getCookie(name: string): string | null {
+    if (typeof window === 'undefined') return null;
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+        const cookieValue = parts.pop()?.split(';').shift();
+        return cookieValue ? decodeURIComponent(cookieValue) : null;
+    }
+    return null;
+}
+
+function setCookie(name: string, value: string, days: number = 365) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    const expires = `expires=${date.toUTCString()}`;
+    document.cookie = `${name}=${encodeURIComponent(value)};${expires};path=/;SameSite=Strict`;
+}
+
 // Public visitor profile state
-export const userProfile = writable<Profile>(() => {
-    if (typeof window !== 'undefined') {
-        const saved = document.cookie.split('; ').find(row => row.startsWith('userProfile='));
-        if (saved) {
-            try {
-                return JSON.parse(decodeURIComponent(saved.split('=')[1]));
-            } catch (e) {
-                console.error('Failed to parse profile cookie:', e);
-            }
+export const userProfile = writable<Profile>({
+    name: '',
+    email: ''
+});
+
+// Initialize profile from cookie
+if (typeof window !== 'undefined') {
+    const savedProfile = getCookie('userProfile');
+    if (savedProfile) {
+        try {
+            const profile = JSON.parse(savedProfile);
+            userProfile.set(profile);
+        } catch (e) {
+            console.error('Failed to parse profile cookie:', e);
         }
     }
-    return { name: '', email: '' };
-});
+}
 
 // Save profile to cookie whenever it changes
 userProfile.subscribe(profile => {
-    if (typeof window !== 'undefined') {
-        const value = encodeURIComponent(JSON.stringify(profile));
-        document.cookie = `userProfile=${value};path=/;max-age=31536000`; // 1 year
+    if (typeof window !== 'undefined' && (profile.name || profile.email)) {
+        setCookie('userProfile', JSON.stringify(profile));
     }
 });
 
