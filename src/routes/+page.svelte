@@ -44,7 +44,7 @@
             attendees.length > 0
               ? `
             <div class="event-attendees-list">
-              ${attendees.join(", ")}
+              ${attendees.map(a => a.name).join(", ")}
             </div>
           `
               : ""
@@ -88,7 +88,12 @@
         extendedProps: {
           description:
             "Weekly team sync to discuss project progress and blockers",
-          attendees: ["John Smith", "Sarah Johnson", "Mike Chen", "Lisa Wong"],
+          attendees: [
+            { email: "john.smith@example.com", name: "John Smith" },
+            { email: "sarah.j@example.com", name: "Sarah Johnson" },
+            { email: "mike.chen@example.com", name: "Mike Chen" },
+            { email: "lisa.wong@example.com", name: "Lisa Wong" }
+          ],
         },
       },
       {
@@ -99,7 +104,9 @@
         backgroundColor: "#FF9800",
         extendedProps: {
           description: "Team lunch at the cafeteria",
-          attendees: ["Entire Development Team"],
+          attendees: [
+            { email: "team@example.com", name: "Entire Development Team" }
+          ],
         },
       },
       {
@@ -111,7 +118,11 @@
         backgroundColor: "#f44336",
         extendedProps: {
           description: "Final submission deadline for Q1 project deliverables",
-          attendees: ["Project Team", "Stakeholders", "Client Representatives"],
+          attendees: [
+            { email: "project.team@example.com", name: "Project Team" },
+            { email: "stakeholders@example.com", name: "Stakeholders" },
+            { email: "client.reps@example.com", name: "Client Representatives" }
+          ],
         },
       },
       {
@@ -123,7 +134,11 @@
         extendedProps: {
           description:
             "Interactive workshop with client to review new features",
-          attendees: ["Development Team", "Product Manager", "Client Team"],
+          attendees: [
+            { email: "dev.team@example.com", name: "Development Team" },
+            { email: "pm@example.com", name: "Product Manager" },
+            { email: "client.team@example.com", name: "Client Team" }
+          ],
         },
       },
       {
@@ -135,9 +150,9 @@
         extendedProps: {
           description: "Review of weekly goals and achievements",
           attendees: [
-            "Team Lead",
-            "Department Managers",
-            "Project Coordinators",
+            { email: "team.lead@example.com", name: "Team Lead" },
+            { email: "dept.managers@example.com", name: "Department Managers" },
+            { email: "project.coords@example.com", name: "Project Coordinators" }
           ],
         },
       },

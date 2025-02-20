@@ -4,6 +4,11 @@
   import { createEventDispatcher } from "svelte";
   import { currentUser, userProfile } from "$lib/stores/auth";
 
+  function copyEmails(attendees) {
+    const emails = attendees.map(a => a.email).join(', ');
+    navigator.clipboard.writeText(emails);
+  }
+
   const dispatch = createEventDispatcher();
 
   const DAYS_NL = [
@@ -74,20 +79,23 @@
       {/if}
       {#if $userProfile.name && $userProfile.email}
         <button
-          class={event.extendedProps?.attendees?.includes($userProfile.name)
+          class={event.extendedProps?.attendees?.some(a => a.email === $userProfile.email)
             ? "leave-button"
             : "join-button"}
           on:click={() => {
             if (event.extendedProps) {
-              if (event.extendedProps.attendees?.includes($userProfile.name)) {
+              if (event.extendedProps.attendees?.some(a => a.email === $userProfile.email)) {
                 event.extendedProps.attendees =
                   event.extendedProps.attendees.filter(
-                    (a) => a !== $userProfile.name
+                    (a) => a.email !== $userProfile.email
                   );
               } else {
                 event.extendedProps.attendees = [
                   ...(event.extendedProps.attendees || []),
-                  $userProfile.name,
+                  {
+                    email: $userProfile.email,
+                    name: $userProfile.name || $userProfile.email
+                  }
                 ];
               }
               // Update the event without opening the form
@@ -96,7 +104,7 @@
             }
           }}
         >
-          {event.extendedProps?.attendees?.includes($userProfile.name)
+          {event.extendedProps?.attendees?.some(a => a.email === $userProfile.email)
             ? "Ik kom niet"
             : "Ik kom ook!"}
         </button>
@@ -127,10 +135,21 @@
 
     {#if event.extendedProps?.attendees}
       <div class="event-attendees">
-        <strong>Vrijwilligers:</strong>
+        <div class="attendees-header">
+          <strong>Vrijwilligers:</strong>
+          {#if $currentUser}
+            <button 
+              class="copy-button" 
+              on:click={() => copyEmails(event.extendedProps.attendees)}
+              title="Copy all email addresses"
+            >
+              📋
+            </button>
+          {/if}
+        </div>
         <ul>
           {#each event.extendedProps.attendees as attendee}
-            <li>{attendee}</li>
+            <li>{attendee.name}</li>
           {/each}
         </ul>
       </div>
@@ -190,5 +209,24 @@
 
   li {
     padding: 3px 0;
+  }
+
+  .attendees-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+  }
+
+  .copy-button {
+    padding: 2px 6px;
+    font-size: 14px;
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+
+  .copy-button:hover {
+    background: #f5f5f5;
   }
 </style>

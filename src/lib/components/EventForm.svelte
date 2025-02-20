@@ -102,7 +102,7 @@
         <input
           type="text"
           bind:value={newAttendee}
-          placeholder="Add attendee"
+          placeholder="Add attendee by using their email address"
         />
         <button type="button" on:click={addAttendee}>Add</button>
       </div>

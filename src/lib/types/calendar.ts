@@ -10,7 +10,10 @@ export interface CalendarEvent extends EventInput {
   extendedProps?: {
     description?: string;
     location?: string;
-    attendees?: string[];
+    attendees?: Array<{
+      email: string;
+      name: string;
+    }>;
   };
 }
 
