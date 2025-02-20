@@ -1,48 +1,70 @@
 <script lang="ts">
-  import type { CalendarEvent } from '$lib/types/calendar';
-  import { createEventDispatcher } from 'svelte';
+  import type { CalendarEvent } from "$lib/types/calendar";
+  import { createEventDispatcher } from "svelte";
+  import { userProfile } from "$lib/stores/auth";
 
+  // Format date for datetime-local input
+  function formatDateForInput(date: Date | null): string {
+    if (!date) return "";
+    return new Date(date).toISOString().slice(0, 16);
+  }
+
+  // Default event or format existing event dates
   export let event: Partial<CalendarEvent> = {
-    title: '',
-    start: new Date().toISOString().slice(0, 16),
-    end: new Date(Date.now() + 3600000).toISOString().slice(0, 16),
-    backgroundColor: '#4CAF50',
+    title: "",
+    start: new Date(),
+    end: new Date(Date.now() + 3600000),
+    backgroundColor: "#4CAF50",
     extendedProps: {
-      description: '',
-      attendees: []
-    }
+      description: "",
+      attendees: [],
+    },
+    ...event,
   };
+
+  // Convert dates to strings for datetime-local inputs
+  let startStr = formatDateForInput(event.start as Date);
+  let endStr = formatDateForInput(event.end as Date);
+
+  // Update event dates when input strings change
+  $: event.start = startStr ? new Date(startStr) : null;
+  $: event.end = endStr ? new Date(endStr) : null;
   export let isEdit = false;
 
   const dispatch = createEventDispatcher();
-  let newAttendee = '';
+  let newAttendee = "";
 
   function handleSubmit() {
     if (!event.title || !event.start || !event.end) {
-      alert('Please fill in all required fields');
+      alert("Please fill in all required fields");
       return;
     }
-    
-    dispatch('save', { event });
+
+    dispatch("save", { event });
   }
 
   function addAttendee() {
     if (newAttendee && event.extendedProps) {
-      event.extendedProps.attendees = [...(event.extendedProps.attendees || []), newAttendee];
-      newAttendee = '';
+      event.extendedProps.attendees = [
+        ...(event.extendedProps.attendees || []),
+        newAttendee,
+      ];
+      newAttendee = "";
     }
   }
 
   function removeAttendee(index: number) {
     if (event.extendedProps?.attendees) {
-      event.extendedProps.attendees = event.extendedProps.attendees.filter((_, i) => i !== index);
+      event.extendedProps.attendees = event.extendedProps.attendees.filter(
+        (_, i) => i !== index
+      );
     }
   }
 </script>
 
 <div class="event-form">
-  <h2>{isEdit ? 'Edit Event' : 'Create New Event'}</h2>
-  
+  <h2>{isEdit ? "Edit Event" : "Create New Event"}</h2>
+
   <form on:submit|preventDefault={handleSubmit}>
     <div class="form-group">
       <label for="title">Title*</label>
@@ -51,12 +73,12 @@
 
     <div class="form-group">
       <label for="start">Start Time*</label>
-      <input id="start" type="datetime-local" bind:value={event.start} required />
+      <input id="start" type="datetime-local" bind:value={startStr} required />
     </div>
 
     <div class="form-group">
       <label for="end">End Time*</label>
-      <input id="end" type="datetime-local" bind:value={event.end} required />
+      <input id="end" type="datetime-local" bind:value={endStr} required />
     </div>
 
     <div class="form-group">
@@ -88,7 +110,8 @@
           {#each event.extendedProps.attendees as attendee, i}
             <li>
               {attendee}
-              <button type="button" on:click={() => removeAttendee(i)}>×</button>
+              <button type="button" on:click={() => removeAttendee(i)}>×</button
+              >
             </li>
           {/each}
         </ul>
@@ -96,8 +119,8 @@
     </div>
 
     <div class="form-actions">
-      <button type="submit">{isEdit ? 'Update' : 'Create'}</button>
-      <button type="button" on:click={() => dispatch('cancel')}>Cancel</button>
+      <button type="submit">{isEdit ? "Update" : "Create"}</button>
+      <button type="button" on:click={() => dispatch("cancel")}>Cancel</button>
     </div>
   </form>
 </div>
@@ -117,11 +140,18 @@
     font-weight: bold;
   }
 
-  input, textarea {
+  input,
+  textarea {
     width: 100%;
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
+  }
+
+  .attendee-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
 
   .attendee-input {
@@ -131,6 +161,12 @@
 
   .attendee-input input {
     flex: 1;
+  }
+
+  .join-button {
+    background: #2196f3;
+    color: white;
+    width: 100%;
   }
 
   .attendees-list {
@@ -164,7 +200,7 @@
   }
 
   button[type="submit"] {
-    background: #4CAF50;
+    background: #4caf50;
     color: white;
   }
 

@@ -3,8 +3,8 @@ import type { EventInput } from '@event-calendar/core';
 export interface CalendarEvent extends EventInput {
   id: string;
   title: string;
-  start: string;
-  end: string;
+  start: Date;
+  end: Date;
   backgroundColor?: string;
   allDay?: boolean;
   extendedProps?: {

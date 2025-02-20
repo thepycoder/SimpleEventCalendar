@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import Calendar from "@event-calendar/core";
-  import { currentUser, login, logout } from "$lib/stores/auth";
+  import { currentUser, userProfile, login, logout, updateProfile } from "$lib/stores/auth";
   import TimeGrid from "@event-calendar/time-grid";
   import DayGrid from "@event-calendar/day-grid";
   import List from "@event-calendar/list";
@@ -189,15 +189,31 @@
 
 <main>
   <div class="header">
-    {#if $currentUser}
-      <div class="user-info">
-        Welcome, {$currentUser.name}
-        <button on:click={logout}>Logout</button>
+    <div class="profile-section">
+      <div class="profile-fields">
+        <input 
+          type="text" 
+          placeholder="Your name"
+          value={$userProfile.name}
+          on:change={(e) => updateProfile(e.target.value, $userProfile.email)}
+        />
+        <input 
+          type="email" 
+          placeholder="Your email"
+          value={$userProfile.email}
+          on:change={(e) => updateProfile($userProfile.name, e.target.value)}
+        />
       </div>
-      <button on:click={handleCreateEvent}>Create Event</button>
-    {:else}
-      <button on:click={login}>Login</button>
-    {/if}
+    </div>
+    <div class="admin-section">
+      {#if $currentUser}
+        <span class="admin-label">Admin</span>
+        <button on:click={handleCreateEvent}>Create Event</button>
+        <button on:click={logout}>Logout</button>
+      {:else}
+        <button on:click={login}>Admin Login</button>
+      {/if}
+    </div>
   </div>
 
   <Calendar {plugins} {options} />
@@ -210,6 +226,11 @@
         selectedEvent = null;
       }}
       onEdit={handleEditEvent}
+      on:update={({ detail }) => {
+        options.events = options.events.map(e => 
+          e.id === detail.event.id ? detail.event : e
+        );
+      }}
     />
   {/if}
 
@@ -240,10 +261,33 @@
     margin-bottom: 1rem;
   }
 
+  .profile-section, .admin-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .admin-label {
+    font-weight: bold;
+    color: #666;
+  }
+
   .user-info {
     display: flex;
     align-items: center;
     gap: 1rem;
+  }
+
+  .profile-fields {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .profile-fields input {
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
   }
 
   button {
