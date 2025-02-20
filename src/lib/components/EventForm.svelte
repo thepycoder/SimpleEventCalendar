@@ -31,7 +31,7 @@
   let newAttendeeEmail = "";
   let newAttendeeName = "";
 
-  function handleSubmit() {
+  function handleSubmit(): void {
     if (!event.title || !event.start || !event.end) {
       alert("Please fill in all required fields");
       return;
@@ -54,7 +54,7 @@
     }
   }
 
-  function removeAttendee(index: number) {
+  function removeAttendee(index: number): void {
     if (event.extendedProps?.attendees) {
       event.extendedProps.attendees = event.extendedProps.attendees.filter(
         (_, i) => i !== index

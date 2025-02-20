@@ -21,6 +21,10 @@ export interface EventClickInfo {
   event: CalendarEvent;
   el: HTMLElement;
   jsEvent: MouseEvent;
+  view: {
+    type: string;
+    calendar: unknown;
+  };
 }
 
 export interface EventContentArg {

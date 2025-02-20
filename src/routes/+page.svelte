@@ -167,7 +167,7 @@
   let isEditMode = false;
 
   // Event form handlers
-  function handleCreateEvent() {
+  function handleCreateEvent(): void {
     isEditMode = false;
     showEventForm = true;
   }
@@ -178,7 +178,7 @@
     showEventForm = true;
   }
 
-  function handleSaveEvent(event: CustomEvent) {
+  function handleSaveEvent(event: CustomEvent<{event: CalendarEvent}>): void {
     const eventData = event.detail.event;
 
     if (isEditMode && selectedEvent) {

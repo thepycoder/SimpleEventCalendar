@@ -4,7 +4,7 @@
   import { createEventDispatcher } from "svelte";
   import { currentUser, userProfile } from "$lib/stores/auth";
 
-  function copyEmails(attendees) {
+  function copyEmails(attendees: Array<{email: string; name: string}>) {
     const emails = attendees.map(a => a.email).join(', ');
     navigator.clipboard.writeText(emails);
   }
@@ -62,7 +62,7 @@
   export let onClose: () => void;
   export let onEdit: (event: CalendarEvent) => void;
 
-  function handleOutsideClick(e) {
+  function handleOutsideClick(e: MouseEvent) {
     if (e.target === e.currentTarget) {
       onClose();
     }
