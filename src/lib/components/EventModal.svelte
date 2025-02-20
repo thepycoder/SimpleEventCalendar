@@ -3,10 +3,10 @@
   import type { CalendarEvent } from "$lib/types/calendar";
   import { createEventDispatcher } from "svelte";
   import { currentUser, userProfile } from "$lib/stores/auth";
-  import { updateEventAttendees } from '$lib/services/events';
+  import { updateEventAttendees } from "$lib/services/events";
 
-  function copyEmails(attendees: Array<{email: string; name: string}>) {
-    const emails = attendees.map(a => a.email).join(', ');
+  function copyEmails(attendees: Array<{ email: string; name: string }>) {
+    const emails = attendees.map((a) => a.email).join(", ");
     navigator.clipboard.writeText(emails);
   }
 
@@ -77,36 +77,13 @@
     <div class="modal-header">
       <div class="action-buttons">
         {#if $currentUser}
-          <button class="edit-button" on:click={() => onEdit(event)}>Edit</button>
-        {/if}
-        {#if $userProfile.name && $userProfile.email}
-          <button
-            class={event.extendedProps?.attendees?.some(a => a.email === $userProfile.email)
-              ? "leave-button"
-              : "join-button"}
-            on:click={async () => {
-              if (event.extendedProps) {
-                const newAttendees = event.extendedProps.attendees?.some(a => a.email === $userProfile.email)
-                  ? (event.extendedProps.attendees.filter(a => a.email !== $userProfile.email))
-                  : [...(event.extendedProps.attendees || []), {
-                      email: $userProfile.email,
-                      name: $userProfile.name || $userProfile.email
-                    }];
-
-                event.extendedProps.attendees = newAttendees;
-                
-                // Update the event and specify that only attendees changed
-                dispatch("update", { 
-                  event: event,
-                  onlyAttendeesChanged: true 
-                });
-              }
-            }}
+          <button class="edit-button" on:click={() => onEdit(event)}
+            >Edit</button
           >
-            {event.extendedProps?.attendees?.some(a => a.email === $userProfile.email)
-              ? "Ik kom niet"
-              : "Ik kom ook!"}
-          </button>
+          <button
+            class="delete-button"
+            on:click={() => dispatch("delete", { event })}>Delete</button
+          >
         {/if}
       </div>
       <button class="close-button" on:click={onClose}>&times;</button>
@@ -138,8 +115,8 @@
         <div class="attendees-header">
           <strong>Vrijwilligers:</strong>
           {#if $currentUser}
-            <button 
-              class="copy-button" 
+            <button
+              class="copy-button"
               on:click={() => copyEmails(event.extendedProps.attendees)}
               title="Copy all email addresses"
             >
@@ -152,6 +129,48 @@
             <li>{attendee.name}</li>
           {/each}
         </ul>
+      </div>
+    {/if}
+
+    {#if $userProfile.name && $userProfile.email}
+      <div class="join-section">
+        <button
+          class={event.extendedProps?.attendees?.some(
+            (a) => a.email === $userProfile.email
+          )
+            ? "leave-button"
+            : "join-button"}
+          on:click={async () => {
+            if (event.extendedProps) {
+              const newAttendees = event.extendedProps.attendees?.some(
+                (a) => a.email === $userProfile.email
+              )
+                ? event.extendedProps.attendees.filter(
+                    (a) => a.email !== $userProfile.email
+                  )
+                : [
+                    ...(event.extendedProps.attendees || []),
+                    {
+                      email: $userProfile.email,
+                      name: $userProfile.name || $userProfile.email,
+                    },
+                  ];
+
+              event.extendedProps.attendees = newAttendees;
+
+              dispatch("update", {
+                event: event,
+                onlyAttendeesChanged: true,
+              });
+            }
+          }}
+        >
+          {event.extendedProps?.attendees?.some(
+            (a) => a.email === $userProfile.email
+          )
+            ? "Uitschrijven"
+            : "Inschrijven als vrijwilliger!"}
+        </button>
       </div>
     {/if}
   </div>
@@ -233,5 +252,16 @@
 
   .copy-button:hover {
     background: #f5f5f5;
+  }
+
+  .join-section {
+    margin-top: 20px;
+    text-align: center;
+  }
+
+  .join-section button {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
   }
 </style>

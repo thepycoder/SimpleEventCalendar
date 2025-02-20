@@ -12,6 +12,7 @@
     createEvent,
     updateEvent,
     updateEventAttendees,
+    deleteEvent
   } from "$lib/services/events";
   import GoogleSignInButton from "$lib/components/GoogleSignInButton.svelte";
   import WelcomeModal from "$lib/components/WelcomeModal.svelte";
@@ -81,7 +82,7 @@
   const plugins = [TimeGrid, DayGrid, List];
 
   let options: EventCalendarOptions = {
-    view: "timeGridWeek",
+    view: "dayGridMonth",
     views: {
       dayGridMonth: {
         eventContent: renderEvent,
@@ -219,6 +220,19 @@
         selectedEvent = null;
       }}
       onEdit={handleEditEvent}
+      on:delete={async ({ detail }) => {
+        if (confirm('Are you sure you want to delete this event?')) {
+          try {
+            await deleteEvent(detail.event.id);
+            options.events = options.events.filter(e => e.id !== detail.event.id);
+            showModal = false;
+            selectedEvent = null;
+          } catch (error) {
+            console.error("Error deleting event:", error);
+            alert("Error deleting event. Please try again.");
+          }
+        }
+      }}
       on:update={async ({ detail }) => {
         try {
           // If only attendees changed, use the specific update function

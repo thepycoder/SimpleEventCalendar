@@ -25,6 +25,15 @@
   let startStr = formatDateForInput(event.start as Date);
   let endStr = formatDateForInput(event.end as Date);
 
+  // Reactive statements to update event dates when input strings change
+  $: if (startStr) {
+    event.start = new Date(startStr);
+  }
+
+  $: if (endStr) {
+    event.end = new Date(endStr);
+  }
+
   export let isEdit = false;
 
   const dispatch = createEventDispatcher();
