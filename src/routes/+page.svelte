@@ -31,6 +31,7 @@
   // Custom event renderers
   function renderEvent(info: EventContentArg) {
     const attendees = info.event.extendedProps?.attendees || [];
+    const minAttendees = info.event.extendedProps?.minAttendees;
     let attendeeText = "";
 
     if (attendees.length > 0) {
@@ -48,10 +49,16 @@
       }
     }
 
+    const attendeeCount = minAttendees !== undefined 
+      ? `<div class="event-count ${attendees.length < minAttendees ? 'needs-more' : ''}">
+          ${attendees.length}/${minAttendees} ${attendees.length < minAttendees ? '⚠️' : '✅'}
+        </div>`
+      : '';
+
     return {
       html: `
         <div class="event-content">
-          <div class="event-title">${info.event.title}</div>
+          <div class="event-title">${info.event.title} ${attendeeCount}</div>
           ${attendees.length > 0 ? `<div class="event-attendees">${attendeeText}</div>` : ""}
         </div>
       `,
@@ -60,10 +67,18 @@
 
   function renderListEvent(info: EventContentArg) {
     const attendees = info.event.extendedProps?.attendees || [];
+    const minAttendees = info.event.extendedProps?.minAttendees;
+
+    const attendeeCount = minAttendees !== undefined 
+      ? `<div class="event-count ${attendees.length < minAttendees ? 'needs-more' : ''}">
+          ${attendees.length}/${minAttendees} ${attendees.length < minAttendees ? '⚠️' : '✅'}
+        </div>`
+      : '';
+
     return {
       html: `
         <div class="list-event-content">
-          <div class="event-title">${info.event.title}</div>
+          <div class="event-title">${info.event.title} ${attendeeCount}</div>
           ${
             attendees.length > 0
               ? `
@@ -377,5 +392,15 @@
     font-size: 0.9em;
     color: #666;
     font-style: italic;
+  }
+
+  :global(.event-count) {
+    display: inline-block;
+    font-size: 0.8em;
+    margin-left: 5px;
+  }
+
+  :global(.event-count.needs-more) {
+    color: #ff4444;
   }
 </style>

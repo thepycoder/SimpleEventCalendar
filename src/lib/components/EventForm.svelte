@@ -182,12 +182,20 @@
 
     <div class="form-group">
       <label for="minAttendees">Minimum Required Attendees</label>
-      <input
-        id="minAttendees"
-        type="number"
-        min="0"
-        bind:value={event.extendedProps.minAttendees}
-      />
+      <div class="min-attendees-input">
+        <input
+          id="minAttendees"
+          type="number"
+          min="0"
+          bind:value={event.extendedProps.minAttendees}
+        />
+        {#if event.extendedProps?.minAttendees !== undefined}
+          <span class="attendee-count">
+            {event.extendedProps?.attendees?.length || 0}/{event.extendedProps.minAttendees}
+            {(event.extendedProps?.attendees?.length || 0) < event.extendedProps.minAttendees ? '⚠️' : '✅'}
+          </span>
+        {/if}
+      </div>
     </div>
 
     <div class="form-group">
@@ -319,6 +327,20 @@
   button[type="button"] {
     background: #f44336;
     color: white;
+  }
+
+  .min-attendees-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .min-attendees-input input {
+    width: 100px;
+  }
+
+  .attendee-count {
+    color: #666;
   }
 
   .document-input {

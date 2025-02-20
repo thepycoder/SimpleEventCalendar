@@ -151,7 +151,8 @@ END:VCALENDAR`;
         <span>{event.extendedProps.minAttendees}</span>
         {#if event.extendedProps?.attendees}
           <span class="attendee-count">
-            (Nu: {event.extendedProps.attendees.length})
+            {event.extendedProps.attendees.length}/{event.extendedProps.minAttendees}
+            {event.extendedProps.attendees.length < event.extendedProps.minAttendees ? '⚠️' : '✅'}
           </span>
         {/if}
       </div>
