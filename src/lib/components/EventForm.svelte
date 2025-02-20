@@ -19,16 +19,12 @@
       description: "",
       attendees: [],
     },
-    ...event,
   };
 
   // Convert dates to strings for datetime-local inputs
   let startStr = formatDateForInput(event.start as Date);
   let endStr = formatDateForInput(event.end as Date);
 
-  // Update event dates when input strings change
-  $: event.start = startStr ? new Date(startStr) : null;
-  $: event.end = endStr ? new Date(endStr) : null;
   export let isEdit = false;
 
   const dispatch = createEventDispatcher();
@@ -143,9 +139,9 @@
   input,
   textarea {
     width: 100%;
-    padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
+    height: 30px;
   }
 
   .attendee-actions {
