@@ -3,6 +3,7 @@
   import type { CalendarEvent } from "$lib/types/calendar";
   import { createEventDispatcher } from "svelte";
   import { currentUser, userProfile } from "$lib/stores/auth";
+  import { updateEventAttendees } from '$lib/services/events';
 
   function copyEmails(attendees: Array<{email: string; name: string}>) {
     const emails = attendees.map(a => a.email).join(', ');
@@ -83,25 +84,22 @@
             class={event.extendedProps?.attendees?.some(a => a.email === $userProfile.email)
               ? "leave-button"
               : "join-button"}
-            on:click={() => {
+            on:click={async () => {
               if (event.extendedProps) {
-                if (event.extendedProps.attendees?.some(a => a.email === $userProfile.email)) {
-                  event.extendedProps.attendees =
-                    event.extendedProps.attendees.filter(
-                      (a) => a.email !== $userProfile.email
-                    );
-                } else {
-                  event.extendedProps.attendees = [
-                    ...(event.extendedProps.attendees || []),
-                    {
+                const newAttendees = event.extendedProps.attendees?.some(a => a.email === $userProfile.email)
+                  ? (event.extendedProps.attendees.filter(a => a.email !== $userProfile.email))
+                  : [...(event.extendedProps.attendees || []), {
                       email: $userProfile.email,
                       name: $userProfile.name || $userProfile.email
-                    }
-                  ];
-                }
-                // Update the event without opening the form
-                const updatedEvent = { ...event };
-                dispatch("update", { event: updatedEvent });
+                    }];
+
+                event.extendedProps.attendees = newAttendees;
+                
+                // Update the event and specify that only attendees changed
+                dispatch("update", { 
+                  event: event,
+                  onlyAttendeesChanged: true 
+                });
               }
             }}
           >

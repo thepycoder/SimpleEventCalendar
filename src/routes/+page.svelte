@@ -7,6 +7,12 @@
     logout,
     updateProfile,
   } from "$lib/stores/auth";
+  import {
+    fetchEvents,
+    createEvent,
+    updateEvent,
+    updateEventAttendees,
+  } from "$lib/services/events";
   import GoogleSignInButton from "$lib/components/GoogleSignInButton.svelte";
   import WelcomeModal from "$lib/components/WelcomeModal.svelte";
   import TimeGrid from "@event-calendar/time-grid";
@@ -44,7 +50,7 @@
             attendees.length > 0
               ? `
             <div class="event-attendees-list">
-              ${attendees.map(a => a.name).join(", ")}
+              ${attendees.map((a) => a.name).join(", ")}
             </div>
           `
               : ""
@@ -78,85 +84,7 @@
       center: "title",
       end: "dayGridMonth,timeGridWeek,timeGridDay,listYear",
     },
-    events: [
-      {
-        id: "1",
-        title: "Team Meeting",
-        start: "2025-02-19T10:00:00",
-        end: "2025-02-19T11:30:00",
-        backgroundColor: "#4CAF50",
-        extendedProps: {
-          description:
-            "Weekly team sync to discuss project progress and blockers",
-          attendees: [
-            { email: "john.smith@example.com", name: "John Smith" },
-            { email: "sarah.j@example.com", name: "Sarah Johnson" },
-            { email: "mike.chen@example.com", name: "Mike Chen" },
-            { email: "lisa.wong@example.com", name: "Lisa Wong" }
-          ],
-        },
-      },
-      {
-        id: "2",
-        title: "Lunch Break",
-        start: "2025-02-19T12:00:00",
-        end: "2025-02-19T13:00:00",
-        backgroundColor: "#FF9800",
-        extendedProps: {
-          description: "Team lunch at the cafeteria",
-          attendees: [
-            { email: "team@example.com", name: "Entire Development Team" }
-          ],
-        },
-      },
-      {
-        id: "3",
-        title: "Project Deadline",
-        start: "2025-02-20T00:00:00",
-        end: "2025-02-21T00:00:00",
-        allDay: true,
-        backgroundColor: "#f44336",
-        extendedProps: {
-          description: "Final submission deadline for Q1 project deliverables",
-          attendees: [
-            { email: "project.team@example.com", name: "Project Team" },
-            { email: "stakeholders@example.com", name: "Stakeholders" },
-            { email: "client.reps@example.com", name: "Client Representatives" }
-          ],
-        },
-      },
-      {
-        id: "4",
-        title: "Client Workshop",
-        start: "2025-02-21T14:00:00",
-        end: "2025-02-21T16:30:00",
-        backgroundColor: "#2196F3",
-        extendedProps: {
-          description:
-            "Interactive workshop with client to review new features",
-          attendees: [
-            { email: "dev.team@example.com", name: "Development Team" },
-            { email: "pm@example.com", name: "Product Manager" },
-            { email: "client.team@example.com", name: "Client Team" }
-          ],
-        },
-      },
-      {
-        id: "5",
-        title: "Weekly Review",
-        start: "2025-02-23T09:00:00",
-        end: "2025-02-23T10:00:00",
-        backgroundColor: "#9C27B0",
-        extendedProps: {
-          description: "Review of weekly goals and achievements",
-          attendees: [
-            { email: "team.lead@example.com", name: "Team Lead" },
-            { email: "dept.managers@example.com", name: "Department Managers" },
-            { email: "project.coords@example.com", name: "Project Coordinators" }
-          ],
-        },
-      },
-    ],
+    events: [],
     eventClick: handleEventClick,
   };
 
@@ -178,25 +106,33 @@
     showEventForm = true;
   }
 
-  function handleSaveEvent(event: CustomEvent<{event: CalendarEvent}>): void {
-    const eventData = event.detail.event;
+  async function handleSaveEvent(
+    event: CustomEvent<{ event: CalendarEvent }>
+  ): Promise<void> {
+    try {
+      const eventData = event.detail.event;
 
-    if (isEditMode && selectedEvent) {
-      // Update existing event
-      options.events = options.events.map((e) =>
-        e.id === selectedEvent.id ? { ...eventData, id: selectedEvent.id } : e
-      );
-    } else {
-      // Create new event
-      const newEvent = {
-        ...eventData,
-        id: crypto.randomUUID(),
+      if (isEditMode && selectedEvent) {
+        await updateEvent({ ...eventData, id: selectedEvent.id });
+        calendarEvents = calendarEvents.map((e) =>
+          e.id === selectedEvent.id ? { ...eventData, id: selectedEvent.id } : e
+        );
+      } else {
+        const newEvent = await createEvent(eventData);
+        calendarEvents = [...calendarEvents, newEvent];
+      }
+
+      options = {
+        ...options,
+        events: calendarEvents,
       };
-      options.events = [...options.events, newEvent];
-    }
 
-    showEventForm = false;
-    selectedEvent = null;
+      showEventForm = false;
+      selectedEvent = null;
+    } catch (error) {
+      console.error("Error saving event:", error);
+      alert("Error saving event. Please try again.");
+    }
   }
 
   // Handle event clicks
@@ -207,7 +143,19 @@
 
   let showWelcomeModal = false;
 
-  onMount(() => {
+  let calendarEvents: CalendarEvent[] = [];
+
+  onMount(async () => {
+    try {
+      calendarEvents = await fetchEvents();
+      options = {
+        ...options,
+        events: calendarEvents,
+      };
+    } catch (error) {
+      console.error("Error fetching events:", error);
+    }
+
     // Show welcome modal if no profile exists
     if (!$userProfile.name && !$userProfile.email) {
       showWelcomeModal = true;
@@ -254,10 +202,25 @@
         selectedEvent = null;
       }}
       onEdit={handleEditEvent}
-      on:update={({ detail }) => {
-        options.events = options.events.map((e) =>
-          e.id === detail.event.id ? detail.event : e
-        );
+      on:update={async ({ detail }) => {
+        try {
+          // If only attendees changed, use the specific update function
+          if (detail.onlyAttendeesChanged) {
+            await updateEventAttendees(
+              detail.event.id,
+              detail.event.extendedProps?.attendees || []
+            );
+          } else {
+            await updateEvent(detail.event);
+          }
+
+          options.events = options.events.map((e) =>
+            e.id === detail.event.id ? detail.event : e
+          );
+        } catch (error) {
+          console.error("Error updating event:", error);
+          alert("Error updating event. Please try again.");
+        }
       }}
     />
   {/if}

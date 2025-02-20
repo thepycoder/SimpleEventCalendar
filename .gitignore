@@ -22,3 +22,23 @@ Thumbs.db
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .aider*
+
+# Firebase auto-generated files
+.firebase/
+firebase-debug.log
+
+# Node modules
+node_modules/
+functions/node_modules/
+
+# Cloud functions build files
+functions/lib/
+functions/dist/
+
+# Service account credentials (DO NOT COMMIT)
+serviceAccountKey.json
+
+# Environment variables
+.env
+.runtimeconfig.json
+
