@@ -138,13 +138,6 @@ END:VCALENDAR`;
       </div>
     {/if}
 
-    {#if event.extendedProps?.description}
-      <div class="event-description">
-        <strong>Beschrijving:</strong>
-        <p>{event.extendedProps.description}</p>
-      </div>
-    {/if}
-
     {#if event.extendedProps?.minAttendees !== undefined}
       <div class="event-min-attendees">
         <strong>Minimum benodigde vrijwilligers:</strong>
@@ -157,6 +150,14 @@ END:VCALENDAR`;
         {/if}
       </div>
     {/if}
+
+    {#if event.extendedProps?.description}
+      <div class="event-description">
+        <strong>Beschrijving:</strong>
+        <p>{event.extendedProps.description}</p>
+      </div>
+    {/if}
+
 
     {#if event.extendedProps?.documents?.length}
       <div class="event-documents">
@@ -357,6 +358,10 @@ END:VCALENDAR`;
     align-items: center;
     gap: 8px;
     margin-bottom: 5px;
+  }
+
+  .attendees-header strong {
+    font-size: inherit;
   }
 
   .copy-button {

@@ -138,6 +138,16 @@
     </div>
 
     <div class="form-group">
+      <label for="location">Waar?</label>
+      <input
+        id="location"
+        type="text"
+        bind:value={event.extendedProps.location}
+        placeholder="Locatie van het evenement"
+      />
+    </div>
+
+    <div class="form-group">
       <label>Attendees</label>
       <div class="attendee-input">
         <input

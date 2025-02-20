@@ -12,7 +12,7 @@
     createEvent,
     updateEvent,
     updateEventAttendees,
-    deleteEvent
+    deleteEvent,
   } from "$lib/services/events";
   import GoogleSignInButton from "$lib/components/GoogleSignInButton.svelte";
   import WelcomeModal from "$lib/components/WelcomeModal.svelte";
@@ -49,11 +49,12 @@
       }
     }
 
-    const attendeeCount = minAttendees !== undefined 
-      ? `<div class="event-count ${attendees.length < minAttendees ? 'needs-more' : ''}">
-          ${attendees.length}/${minAttendees} ${attendees.length < minAttendees ? '⚠️' : '✅'}
+    const attendeeCount =
+      minAttendees !== undefined
+        ? `<div class="event-count ${attendees.length < minAttendees ? "needs-more" : ""}">
+          ${attendees.length}/${minAttendees} ${attendees.length < minAttendees ? "⚠️" : "✅"}
         </div>`
-      : '';
+        : "";
 
     return {
       html: `
@@ -69,11 +70,12 @@
     const attendees = info.event.extendedProps?.attendees || [];
     const minAttendees = info.event.extendedProps?.minAttendees;
 
-    const attendeeCount = minAttendees !== undefined 
-      ? `<div class="event-count ${attendees.length < minAttendees ? 'needs-more' : ''}">
-          ${attendees.length}/${minAttendees} ${attendees.length < minAttendees ? '⚠️' : '✅'}
+    const attendeeCount =
+      minAttendees !== undefined
+        ? `<div class="event-count ${attendees.length < minAttendees ? "needs-more" : ""}">
+          ${attendees.length}/${minAttendees} ${attendees.length < minAttendees ? "⚠️" : "✅"}
         </div>`
-      : '';
+        : "";
 
     return {
       html: `
@@ -236,10 +238,12 @@
       }}
       onEdit={handleEditEvent}
       on:delete={async ({ detail }) => {
-        if (confirm('Are you sure you want to delete this event?')) {
+        if (confirm("Are you sure you want to delete this event?")) {
           try {
             await deleteEvent(detail.event.id);
-            options.events = options.events.filter(e => e.id !== detail.event.id);
+            options.events = options.events.filter(
+              (e) => e.id !== detail.event.id
+            );
             showModal = false;
             selectedEvent = null;
           } catch (error) {
@@ -378,7 +382,6 @@
   }
 
   :global(.event-attendees) {
-    font-size: 0.8em;
     opacity: 0.8;
   }
 
@@ -390,7 +393,6 @@
 
   :global(.event-attendees-list) {
     font-size: 0.9em;
-    color: #666;
     font-style: italic;
   }
 
