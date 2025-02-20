@@ -365,8 +365,8 @@
   .modal-content {
     background: white;
     border-radius: 8px;
-    max-width: 600px;
-    width: 90%;
+    max-width: 1000px;
+    width: 100%;
   }
   :global(.event-content) {
     padding: 2px 4px;

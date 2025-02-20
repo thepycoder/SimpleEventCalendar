@@ -54,7 +54,7 @@
     if (newDocTitle && newDocUrl && event.extendedProps) {
       event.extendedProps.documents = [
         ...(event.extendedProps.documents || []),
-        { title: newDocTitle, url: newDocUrl }
+        { title: newDocTitle, url: newDocUrl },
       ];
       newDocTitle = "";
       newDocUrl = "";
@@ -63,7 +63,9 @@
 
   function removeDocument(index: number) {
     if (event.extendedProps?.documents) {
-      event.extendedProps.documents = event.extendedProps.documents.filter((_, i) => i !== index);
+      event.extendedProps.documents = event.extendedProps.documents.filter(
+        (_, i) => i !== index
+      );
     }
   }
 
@@ -82,8 +84,8 @@
         ...(event.extendedProps.attendees || []),
         {
           email: newAttendeeEmail,
-          name: newAttendeeName
-        }
+          name: newAttendeeName,
+        },
       ];
       newAttendeeEmail = "";
       newAttendeeName = "";
@@ -103,144 +105,205 @@
   <h2>{isEdit ? "Edit Event" : "Create New Event"}</h2>
 
   <form on:submit|preventDefault={handleSubmit}>
-    <div class="form-group">
-      <label for="title">Title*</label>
-      <input id="title" type="text" bind:value={event.title} required />
-    </div>
+    <div class="form-layout">
+      <!-- Left Column -->
+      <div class="form-column">
+        <fieldset>
+          <legend>Basic Information</legend>
+          <div class="form-group">
+            <label for="title">Title*</label>
+            <input id="title" type="text" bind:value={event.title} required />
+          </div>
 
-    <div class="form-group">
-      <label for="start">Start Time*</label>
-      <input id="start" type="datetime-local" bind:value={startStr} required />
-    </div>
+          <div class="form-group">
+            <label for="start">Start Time*</label>
+            <input
+              id="start"
+              type="datetime-local"
+              bind:value={startStr}
+              required
+            />
+          </div>
 
-    <div class="form-group">
-      <label for="end">End Time*</label>
-      <input id="end" type="datetime-local" bind:value={endStr} required />
-    </div>
+          <div class="form-group">
+            <label for="end">End Time*</label>
+            <input
+              id="end"
+              type="datetime-local"
+              bind:value={endStr}
+              required
+            />
+          </div>
 
-    <div class="form-group">
-      <label for="color">Color</label>
-      <input
-        id="color"
-        type="color"
-        style="padding:0"
-        bind:value={event.backgroundColor}
-      />
-    </div>
+          <div class="form-group">
+            <label for="location">Location</label>
+            <input
+              id="location"
+              type="text"
+              bind:value={event.extendedProps.location}
+              placeholder="Event location"
+            />
+          </div>
 
-    <div class="form-group">
-      <label for="description">Description</label>
-      <textarea
-        id="description"
-        bind:value={event.extendedProps.description}
-        rows="3"
-      ></textarea>
-    </div>
+          <div class="form-group">
+            <label for="color">Event Color</label>
+            <div class="color-picker">
+              <input
+                id="color"
+                type="color"
+                bind:value={event.backgroundColor}
+              />
+              <span
+                class="color-preview"
+                style="background-color: {event.backgroundColor}"
+              ></span>
+            </div>
+          </div>
+        </fieldset>
 
-    <div class="form-group">
-      <label for="location">Waar?</label>
-      <input
-        id="location"
-        type="text"
-        bind:value={event.extendedProps.location}
-        placeholder="Locatie van het evenement"
-      />
-    </div>
-
-    <div class="form-group">
-      <label>Attendees</label>
-      <div class="attendee-input">
-        <input
-          type="text"
-          bind:value={newAttendeeName}
-          placeholder="Name"
-          on:keydown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              if (newAttendeeName && newAttendeeEmail) {
-                addAttendee();
-              }
-            }
-          }}
-        />
-        <input
-          type="email"
-          bind:value={newAttendeeEmail}
-          placeholder="Email address"
-          on:keydown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              if (newAttendeeName && newAttendeeEmail) {
-                addAttendee();
-              }
-            }
-          }}
-        />
-        <button type="button" on:click={addAttendee}>Add</button>
+        <fieldset>
+          <legend>Description</legend>
+          <div class="form-group">
+            <textarea
+              id="description"
+              bind:value={event.extendedProps.description}
+              rows="4"
+              placeholder="Event description..."
+            ></textarea>
+          </div>
+        </fieldset>
       </div>
-      {#if event.extendedProps?.attendees?.length}
-        <ul class="attendees-list">
-          {#each event.extendedProps.attendees as attendee, i}
-            <li>
-              {attendee.name} ({attendee.email})
-              <button type="button" on:click={() => removeAttendee(i)}>×</button>
-            </li>
-          {/each}
-        </ul>
-      {/if}
-    </div>
 
-    <div class="form-group">
-      <label for="minAttendees">Minimum Required Attendees</label>
-      <div class="min-attendees-input">
-        <input
-          id="minAttendees"
-          type="number"
-          min="0"
-          bind:value={event.extendedProps.minAttendees}
-        />
-        {#if event.extendedProps?.minAttendees !== undefined}
-          <span class="attendee-count">
-            {event.extendedProps?.attendees?.length || 0}/{event.extendedProps.minAttendees}
-            {(event.extendedProps?.attendees?.length || 0) < event.extendedProps.minAttendees ? '⚠️' : '✅'}
-          </span>
-        {/if}
-      </div>
-    </div>
+      <!-- Right Column -->
+      <div class="form-column">
+        <fieldset>
+          <legend>Attendee Management</legend>
+          <div class="form-group">
+            <label>Minimum Required Attendees</label>
+            <div class="min-attendees-input">
+              <input
+                type="number"
+                min="0"
+                bind:value={event.extendedProps.minAttendees}
+              />
+              {#if event.extendedProps?.minAttendees !== undefined}
+                <span class="attendee-count">
+                  {event.extendedProps?.attendees?.length || 0}/{event
+                    .extendedProps.minAttendees}
+                  {(event.extendedProps?.attendees?.length || 0) <
+                  event.extendedProps.minAttendees
+                    ? "⚠️"
+                    : "✅"}
+                </span>
+              {/if}
+            </div>
+          </div>
 
-    <div class="form-group">
-      <label>Documents</label>
-      <div class="document-input">
-        <input
-          type="text"
-          bind:value={newDocTitle}
-          placeholder="Document title"
-        />
-        <input
-          type="url"
-          bind:value={newDocUrl}
-          placeholder="Document URL"
-        />
-        <button type="button" class="add-button" on:click={addDocument}>Add</button>
+          <div class="form-group">
+            <label>Add Attendee</label>
+            <div class="attendee-input">
+              <input
+                type="text"
+                bind:value={newAttendeeName}
+                placeholder="Name"
+                on:keydown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (newAttendeeName && newAttendeeEmail) addAttendee();
+                  }
+                }}
+              />
+              <input
+                type="email"
+                bind:value={newAttendeeEmail}
+                placeholder="Email"
+                on:keydown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (newAttendeeName && newAttendeeEmail) addAttendee();
+                  }
+                }}
+              />
+              <button type="button" class="add-button" on:click={addAttendee}
+                >Add</button
+              >
+            </div>
+          </div>
+
+          {#if event.extendedProps?.attendees?.length}
+            <div class="attendees-list">
+              {#each event.extendedProps.attendees as attendee, i}
+                <div class="attendee-item">
+                  <span>{attendee.name}</span>
+                  <div class="attendee-actions">
+                    <span class="email">{attendee.email}</span>
+                    <button
+                      type="button"
+                      class="remove-button"
+                      on:click={() => removeAttendee(i)}>×</button
+                    >
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </fieldset>
+
+        <fieldset>
+          <legend>Documents</legend>
+          <div class="form-group">
+            <div class="document-input">
+              <input
+                type="text"
+                bind:value={newDocTitle}
+                placeholder="Document title"
+              />
+              <input
+                type="url"
+                bind:value={newDocUrl}
+                placeholder="Document URL"
+              />
+              <button type="button" class="add-button" on:click={addDocument}
+                >Add</button
+              >
+            </div>
+          </div>
+
+          {#if event.extendedProps?.documents?.length}
+            <div class="documents-list">
+              {#each event.extendedProps.documents as doc, i}
+                <div class="document-item">
+                  <span>{doc.title}</span>
+                  <div class="document-actions">
+                    <a
+                      href={doc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="link-button">🔗</a
+                    >
+                    <button
+                      type="button"
+                      class="remove-button"
+                      on:click={() => removeDocument(i)}>×</button
+                    >
+                  </div>
+                </div>
+              {/each}
+            </div>
+          {/if}
+        </fieldset>
       </div>
-      {#if event.extendedProps?.documents?.length}
-        <ul class="documents-list">
-          {#each event.extendedProps.documents as doc, i}
-            <li>
-              <span>{doc.title}</span>
-              <div class="document-actions">
-                <a href={doc.url} target="_blank" rel="noopener noreferrer">🔗</a>
-                <button type="button" class="remove-button" on:click={() => removeDocument(i)}>×</button>
-              </div>
-            </li>
-          {/each}
-        </ul>
-      {/if}
     </div>
 
     <div class="form-actions">
-      <button type="submit">{isEdit ? "Update" : "Create"}</button>
-      <button type="button" on:click={() => dispatch("cancel")}>Cancel</button>
+      <button
+        type="button"
+        class="secondary"
+        on:click={() => dispatch("cancel")}>Cancel</button
+      >
+      <button type="submit" class="primary"
+        >{isEdit ? "Update" : "Create"}</button
+      >
     </div>
   </form>
 </div>
@@ -248,77 +311,121 @@
 <style>
   .event-form {
     padding: 20px;
-    max-height: 80vh; /* Limit height to 80% of viewport height */
-    overflow-y: auto; /* Enable vertical scrolling */
-    position: relative; /* For positioning the form-actions */
+    max-height: 85vh;
+    overflow-y: auto;
+    min-width: 800px;
+  }
+
+  .form-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  fieldset {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+
+  legend {
+    font-weight: bold;
+    padding: 0 10px;
+    color: #444;
   }
 
   .form-group {
     margin-bottom: 15px;
+    width: 100%;
   }
 
   label {
     display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
+    margin-bottom: 8px;
+    color: #555;
   }
 
   input,
   textarea {
     width: 100%;
+    box-sizing: border-box;
+    padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
+    font-size: 14px;
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 100px;
+  }
+
+  .color-picker {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .color-picker input {
+    width: 50px;
+    padding: 0;
     height: 30px;
   }
 
-  .attendee-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  .color-preview {
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
   }
 
-  .attendee-input {
-    display: flex;
-    gap: 10px;
+  .attendee-input,
+  .document-input {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 8px;
     margin-bottom: 10px;
   }
 
-  .attendee-input input {
-    flex: 1;
-    min-width: 0;
+  .attendees-list,
+  .documents-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 8px;
   }
 
-  .join-button {
-    background: #2196f3;
-    color: white;
-    width: 100%;
-  }
-
-  .attendees-list {
-    list-style: none;
-    padding: 0;
-    margin: 10px 0;
-  }
-
-  .attendees-list li {
+  .attendee-item,
+  .document-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 5px;
-    background: #f5f5f5;
-    margin: 5px 0;
+    padding: 8px;
+    background: #f8f8f8;
+    margin: 4px 0;
     border-radius: 4px;
+  }
+
+  .attendee-actions,
+  .document-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .email {
+    color: #666;
+    font-size: 0.9em;
   }
 
   .form-actions {
     display: flex;
-    gap: 10px;
     justify-content: flex-end;
-    margin-top: 20px;
-    position: sticky; /* Make buttons stick to bottom */
-    bottom: 0;
-    background: white; /* Ensure buttons have a solid background */
-    padding: 10px 0;
+    gap: 10px;
+    padding-top: 20px;
     border-top: 1px solid #eee;
   }
 
@@ -327,75 +434,60 @@
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    font-size: 14px;
   }
 
-  button[type="submit"] {
+  .primary {
     background: #4caf50;
     color: white;
   }
 
-  button[type="button"] {
+  .secondary {
     background: #f44336;
     color: white;
-  }
-
-  .min-attendees-input {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .min-attendees-input input {
-    width: 100px;
-  }
-
-  .attendee-count {
-    color: #666;
-  }
-
-  .document-input {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-
-  .document-input input {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .documents-list {
-    list-style: none;
-    padding: 0;
-    margin: 10px 0;
-  }
-
-  .documents-list li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px;
-    background: #f5f5f5;
-    margin: 5px 0;
-    border-radius: 4px;
-  }
-
-  .document-actions {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .document-actions a {
-    text-decoration: none;
   }
 
   .add-button {
-    background: #4caf50;
+    background: #2196f3;
+    color: white;
   }
 
   .remove-button {
-    background: #f44336;
-    padding: 2px 8px;
+    background: #ff5722;
+    color: white;
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  .link-button {
+    text-decoration: none;
+    padding: 4px 8px;
+    background: #666;
+    color: white;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+
+  @media (max-width: 768px) {
+    .form-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .attendee-input,
+    .document-input {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .event-form {
+      padding: 15px;
+      min-width: auto;
+      /* width: 100%; */
+    }
+
+    fieldset {
+      padding: 10px;
+      margin-bottom: 15px;
+    }
   }
 </style>

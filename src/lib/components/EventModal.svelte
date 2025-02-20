@@ -126,145 +126,171 @@ END:VCALENDAR`;
 
     <h2>{event.title}</h2>
 
-    <div class="event-time">
-      <strong>Wanneer:</strong>
-      {formatEventDateTime(event.start, event.end)}
-    </div>
+    <div class="modal-layout">
+      <!-- Left Column -->
+      <div class="modal-column">
+        <fieldset>
+          <legend>Evenement Details</legend>
 
-    {#if event.extendedProps?.location}
-      <div class="event-location">
-        <strong>Waar:</strong>
-        {event.extendedProps.location}
-      </div>
-    {/if}
+          <div class="event-time">
+            <strong>Wanneer:</strong>
+            {formatEventDateTime(event.start, event.end)}
+          </div>
 
-    {#if event.extendedProps?.minAttendees !== undefined}
-      <div class="event-min-attendees">
-        <strong>Minimum benodigde vrijwilligers:</strong>
-        <span>{event.extendedProps.minAttendees}</span>
-        {#if event.extendedProps?.attendees}
-          <span class="attendee-count">
-            {event.extendedProps.attendees.length}/{event.extendedProps.minAttendees}
-            {event.extendedProps.attendees.length < event.extendedProps.minAttendees ? '⚠️' : '✅'}
-          </span>
-        {/if}
-      </div>
-    {/if}
-
-    {#if event.extendedProps?.description}
-      <div class="event-description">
-        <strong>Beschrijving:</strong>
-        <p>{event.extendedProps.description}</p>
-      </div>
-    {/if}
-
-
-    {#if event.extendedProps?.documents?.length}
-      <div class="event-documents">
-        <strong>Documenten:</strong>
-        <ul>
-          {#each event.extendedProps.documents as doc}
-            <li>
-              <a href={doc.url} target="_blank" rel="noopener noreferrer"
-                >{doc.title}</a
-              >
-            </li>
-          {/each}
-        </ul>
-      </div>
-    {/if}
-
-    {#if event.extendedProps?.attendees}
-      <div class="event-attendees">
-        <div class="attendees-header">
-          <strong>Vrijwilligers:</strong>
-          {#if $currentUser}
-            <button
-              class="copy-button"
-              on:click={() => copyEmails(event.extendedProps.attendees)}
-              title="Copy all email addresses"
-            >
-              📋
-            </button>
+          {#if event.extendedProps?.location}
+            <div class="event-location">
+              <strong>Waar:</strong>
+              {event.extendedProps.location}
+            </div>
           {/if}
-        </div>
-        <ul>
-          {#each event.extendedProps.attendees as attendee}
-            <li>{attendee.name}</li>
-          {/each}
-        </ul>
-      </div>
-    {/if}
 
-    {#if $userProfile.name && $userProfile.email}
-      <div class="join-section">
-        <button
-          class={event.extendedProps?.attendees?.some(
-            (a) => a.email === $userProfile.email
-          )
-            ? "leave-button"
-            : "join-button"}
-          on:click={async () => {
-            if (event.extendedProps) {
-              const newAttendees = event.extendedProps.attendees?.some(
-                (a) => a.email === $userProfile.email
-              )
-                ? event.extendedProps.attendees.filter(
-                    (a) => a.email !== $userProfile.email
-                  )
-                : [
-                    ...(event.extendedProps.attendees || []),
-                    {
-                      email: $userProfile.email,
-                      name: $userProfile.name || $userProfile.email,
-                    },
-                  ];
+          {#if event.extendedProps?.description}
+            <div class="event-description">
+              <strong>Beschrijving:</strong>
+              <p>{event.extendedProps.description}</p>
+            </div>
+          {/if}
+        </fieldset>
 
-              event.extendedProps.attendees = newAttendees;
-
-              dispatch("update", {
-                event: event,
-                onlyAttendeesChanged: true,
-              });
-            }
-          }}
-        >
-          {event.extendedProps?.attendees?.some(
-            (a) => a.email === $userProfile.email
-          )
-            ? "Uitschrijven"
-            : "Inschrijven als vrijwilliger!"}
-        </button>
-      </div>
-    {/if}
-    <div class="calendar-integration">
-      <h3>Voeg dit event toe aan je eigen kalender</h3>
-      <div class="calendar-buttons">
-        {#if event}
-          {@const calLinks = generateCalendarLinks(event)}
-          <a
-            href={calLinks.google}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="calendar-button google"
-          >
-            Google Calendar
-          </a>
-          <a
-            href={calLinks.ics}
-            download="event.ics"
-            class="calendar-button apple"
-          >
-            Apple Calendar
-          </a>
-          <a
-            href={calLinks.ics}
-            download="event.ics"
-            class="calendar-button outlook"
-          >
-            Outlook
-          </a>
+        {#if event.extendedProps?.documents?.length}
+          <fieldset>
+            <legend>Documenten</legend>
+            <div class="event-documents">
+              <ul>
+                {#each event.extendedProps.documents as doc}
+                  <li>
+                    <a href={doc.url} target="_blank" rel="noopener noreferrer"
+                      >{doc.title}</a
+                    >
+                  </li>
+                {/each}
+              </ul>
+            </div>
+          </fieldset>
         {/if}
+      </div>
+
+      <!-- Right Column -->
+      <div class="modal-column">
+        <fieldset>
+          <legend>Vrijwilligers</legend>
+          {#if event.extendedProps?.minAttendees !== undefined}
+            <div class="event-min-attendees">
+              <strong>Minimum benodigde vrijwilligers:</strong>
+              <span>{event.extendedProps.minAttendees}</span>
+            </div>
+            {#if event.extendedProps?.attendees}
+              <div class="occupancy-status">
+                <strong>Bezetting:</strong>
+                <span class="attendee-count">
+                  {event.extendedProps.attendees.length}/{event.extendedProps
+                    .minAttendees}
+                  {event.extendedProps.attendees.length <
+                  event.extendedProps.minAttendees
+                    ? "⚠️"
+                    : "✅"}
+                </span>
+              </div>
+            {/if}
+          {/if}
+
+          {#if event.extendedProps?.attendees}
+            <div class="event-attendees">
+              <div class="attendees-header">
+                <strong>Vrijwilligers:</strong>
+                {#if $currentUser}
+                  <button
+                    class="copy-button"
+                    on:click={() => copyEmails(event.extendedProps.attendees)}
+                    title="Copy all email addresses"
+                  >
+                    📋
+                  </button>
+                {/if}
+              </div>
+              <ul class="attendees-list">
+                {#each event.extendedProps.attendees as attendee}
+                  <li>{attendee.name}</li>
+                {/each}
+              </ul>
+            </div>
+          {/if}
+
+          {#if $userProfile.name && $userProfile.email}
+            <div class="join-section">
+              <button
+                class={event.extendedProps?.attendees?.some(
+                  (a) => a.email === $userProfile.email
+                )
+                  ? "leave-button"
+                  : "join-button"}
+                on:click={async () => {
+                  if (event.extendedProps) {
+                    const newAttendees = event.extendedProps.attendees?.some(
+                      (a) => a.email === $userProfile.email
+                    )
+                      ? event.extendedProps.attendees.filter(
+                          (a) => a.email !== $userProfile.email
+                        )
+                      : [
+                          ...(event.extendedProps.attendees || []),
+                          {
+                            email: $userProfile.email,
+                            name: $userProfile.name || $userProfile.email,
+                          },
+                        ];
+
+                    event.extendedProps.attendees = newAttendees;
+
+                    dispatch("update", {
+                      event: event,
+                      onlyAttendeesChanged: true,
+                    });
+                  }
+                }}
+              >
+                {event.extendedProps?.attendees?.some(
+                  (a) => a.email === $userProfile.email
+                )
+                  ? "Uitschrijven"
+                  : "Inschrijven als vrijwilliger!"}
+              </button>
+            </div>
+          {/if}
+        </fieldset>
+
+        <fieldset>
+          <legend>Agenda Integratie</legend>
+          <div class="calendar-integration">
+            <div class="calendar-buttons">
+              {#if event}
+                {@const calLinks = generateCalendarLinks(event)}
+                <a
+                  href={calLinks.google}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="calendar-button google"
+                >
+                  Google Agenda
+                </a>
+                <a
+                  href={calLinks.ics}
+                  download="event.ics"
+                  class="calendar-button apple"
+                >
+                  Apple Agenda
+                </a>
+                <a
+                  href={calLinks.ics}
+                  download="event.ics"
+                  class="calendar-button outlook"
+                >
+                  Outlook Agenda
+                </a>
+              {/if}
+            </div>
+          </div>
+        </fieldset>
       </div>
     </div>
   </div>
@@ -272,8 +298,45 @@ END:VCALENDAR`;
 
 <style>
   .modal {
-    max-width: 500px;
-    position: relative;
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    max-width: 1000px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  .modal-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  .modal-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  fieldset {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+
+  legend {
+    font-weight: bold;
+    padding: 0 10px;
+    color: #444;
+  }
+
+  h2 {
+    margin: 0 0 20px 0;
+    color: #333;
+    font-size: 1.5em;
   }
 
   .modal-header {
@@ -283,128 +346,42 @@ END:VCALENDAR`;
     margin-bottom: 20px;
   }
 
-  .action-buttons {
-    display: flex;
-    gap: 10px;
-  }
-
-  .join-button {
-    background: #4caf50;
-    color: white;
-  }
-
-  .leave-button {
-    background: #f44336;
-    color: white;
-  }
-
-  .edit-button {
-    background: #2196f3;
-    color: white;
-  }
-
-  h2 {
-    margin-top: 0;
-    margin-bottom: 20px;
+  .close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0 8px;
   }
 
   .event-time,
   .event-location,
   .event-description,
-  .event-attendees {
+  .event-min-attendees {
     margin-bottom: 15px;
   }
 
   .event-description p {
     margin: 5px 0;
+    line-height: 1.4;
   }
 
-  ul {
+  .attendees-list {
     list-style-type: none;
     padding-left: 0;
-    margin: 5px 0;
+    margin: 10px 0;
+    max-height: 200px;
+    overflow-y: auto;
   }
 
-  li {
-    padding: 3px 0;
-  }
-
-  .event-min-attendees {
-    margin-bottom: 15px;
-  }
-
-  .attendee-count {
-    margin-left: 10px;
-    color: #666;
-  }
-
-  .event-documents ul {
-    list-style: none;
-    padding-left: 0;
-    margin: 5px 0;
-  }
-
-  .event-documents a {
-    color: #2196f3;
-    text-decoration: none;
-  }
-
-  .event-documents a:hover {
-    text-decoration: underline;
-  }
-
-  .attendees-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 5px;
-  }
-
-  .attendees-header strong {
-    font-size: inherit;
-  }
-
-  .copy-button {
-    padding: 2px 6px;
-    font-size: 14px;
-    background: none;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-  }
-
-  .copy-button:hover {
-    background: #f5f5f5;
-  }
-
-  .join-section {
-    margin-top: 20px;
-    text-align: center;
-  }
-
-  .join-section button {
-    width: 100%;
-    padding: 12px;
-    font-size: 16px;
-  }
-
-  .calendar-integration {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #eee;
-    width: 100%;
-  }
-
-  .calendar-integration h3 {
-    margin: 0 0 10px 0;
-    font-size: 1.1em;
-    color: #333;
+  .attendees-list li {
+    padding: 5px 0;
   }
 
   .calendar-buttons {
     display: flex;
-    gap: 10px;
     flex-wrap: wrap;
-    justify-content: flex-start;
+    gap: 10px;
   }
 
   .calendar-button {
@@ -413,24 +390,77 @@ END:VCALENDAR`;
     text-decoration: none;
     color: white;
     font-size: 14px;
-    display: flex;
-    align-items: center;
-    transition: opacity 0.2s;
   }
 
-  .calendar-button:hover {
-    opacity: 0.9;
+  .calendar-button {
+    background-color: #666;
   }
 
-  .google {
-    background-color: #4285f4;
+  .occupancy-status {
+    margin-bottom: 15px;
   }
 
-  .apple {
-    background-color: #000000;
+  .event-time,
+  .event-location,
+  .event-description,
+  .event-min-attendees,
+  .occupancy-status {
+    margin-bottom: 15px;
   }
 
-  .outlook {
-    background-color: #0078d4;
+  .join-button,
+  .leave-button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+
+  .join-button {
+    background-color: #4caf50;
+  }
+  .leave-button {
+    background-color: #f44336;
+  }
+
+  .copy-button {
+    padding: 4px 8px;
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  @media (max-width: 768px) {
+    .modal-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .modal {
+      width: 95%;
+      padding: 15px;
+    }
+
+    .modal-column {
+      gap: 15px;
+    }
+
+    fieldset {
+      padding: 10px;
+      margin-bottom: 15px;
+    }
+
+    .calendar-buttons {
+      flex-direction: column;
+    }
+
+    .calendar-button {
+      /* width: 100%; */
+      text-align: center;
+    }
   }
 </style>
