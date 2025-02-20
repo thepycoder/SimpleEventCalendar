@@ -44,8 +44,7 @@
             attendees.length > 0
               ? `
             <div class="event-attendees-list">
-              ${attendees.slice(0, 2).join(", ")}
-              ${attendees.length > 20 ? ` +${attendees.length - 2} more` : ""}
+              ${attendees.join(", ")}
             </div>
           `
               : ""

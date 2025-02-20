@@ -32,6 +32,7 @@
           type="text"
           bind:value={name}
           placeholder="Typ hier je naam"
+          maxlength="50"
           required
         />
       </div>
@@ -43,6 +44,7 @@
           type="email"
           bind:value={email}
           placeholder="Typ hier je email adres"
+          maxlength="100"
           required
         />
       </div>

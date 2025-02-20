@@ -79,7 +79,12 @@
 
     <div class="form-group">
       <label for="color">Color</label>
-      <input id="color" type="color" bind:value={event.backgroundColor} />
+      <input
+        id="color"
+        type="color"
+        style="padding:0"
+        bind:value={event.backgroundColor}
+      />
     </div>
 
     <div class="form-group">
