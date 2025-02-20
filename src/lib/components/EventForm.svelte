@@ -230,6 +230,9 @@
 <style>
   .event-form {
     padding: 20px;
+    max-height: 80vh; /* Limit height to 80% of viewport height */
+    overflow-y: auto; /* Enable vertical scrolling */
+    position: relative; /* For positioning the form-actions */
   }
 
   .form-group {
@@ -294,6 +297,11 @@
     gap: 10px;
     justify-content: flex-end;
     margin-top: 20px;
+    position: sticky; /* Make buttons stick to bottom */
+    bottom: 0;
+    background: white; /* Ensure buttons have a solid background */
+    padding: 10px 0;
+    border-top: 1px solid #eee;
   }
 
   button {

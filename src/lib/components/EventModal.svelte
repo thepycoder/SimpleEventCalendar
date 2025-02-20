@@ -5,6 +5,41 @@
   import { currentUser, userProfile } from "$lib/stores/auth";
   import { updateEventAttendees } from "$lib/services/events";
 
+  function generateCalendarLinks(event: CalendarEvent) {
+    // Format date to calendar format (YYYYMMDDTHHMMSSZ)
+    function formatDateForCalendar(date: Date): string {
+      return date.toISOString().replace(/-|:|\.\d+/g, "");
+    }
+
+    const start = formatDateForCalendar(new Date(event.start));
+    const end = formatDateForCalendar(new Date(event.end));
+    const title = encodeURIComponent(event.title);
+    const description = encodeURIComponent(
+      event.extendedProps?.description || ""
+    );
+    const location = encodeURIComponent(event.extendedProps?.location || "");
+
+    // Generate links for different calendar types
+    const google = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${description}&location=${location}`;
+
+    // For Apple/Outlook calendar, we'll generate an ICS file
+    const ics = `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+DTSTART:${start}
+DTEND:${end}
+SUMMARY:${event.title}
+DESCRIPTION:${event.extendedProps?.description || ""}
+LOCATION:${event.extendedProps?.location || ""}
+END:VEVENT
+END:VCALENDAR`;
+
+    return {
+      google,
+      ics: "text/calendar;charset=utf-8," + encodeURIComponent(ics),
+    };
+  }
+
   function copyEmails(attendees: Array<{ email: string; name: string }>) {
     const emails = attendees.map((a) => a.email).join(", ");
     navigator.clipboard.writeText(emails);
@@ -128,7 +163,9 @@
         <ul>
           {#each event.extendedProps.documents as doc}
             <li>
-              <a href={doc.url} target="_blank" rel="noopener noreferrer">{doc.title}</a>
+              <a href={doc.url} target="_blank" rel="noopener noreferrer"
+                >{doc.title}</a
+              >
             </li>
           {/each}
         </ul>
@@ -198,6 +235,36 @@
         </button>
       </div>
     {/if}
+    <div class="calendar-integration">
+      <h3>Voeg dit event toe aan je eigen kalender</h3>
+      <div class="calendar-buttons">
+        {#if event}
+          {@const calLinks = generateCalendarLinks(event)}
+          <a
+            href={calLinks.google}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="calendar-button google"
+          >
+            Google Calendar
+          </a>
+          <a
+            href={calLinks.ics}
+            download="event.ics"
+            class="calendar-button apple"
+          >
+            Apple Calendar
+          </a>
+          <a
+            href={calLinks.ics}
+            download="event.ics"
+            class="calendar-button outlook"
+          >
+            Outlook
+          </a>
+        {/if}
+      </div>
+    </div>
   </div>
 </div>
 
@@ -312,5 +379,52 @@
     width: 100%;
     padding: 12px;
     font-size: 16px;
+  }
+
+  .calendar-integration {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+    width: 100%;
+  }
+
+  .calendar-integration h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.1em;
+    color: #333;
+  }
+
+  .calendar-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .calendar-button {
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: white;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    transition: opacity 0.2s;
+  }
+
+  .calendar-button:hover {
+    opacity: 0.9;
+  }
+
+  .google {
+    background-color: #4285f4;
+  }
+
+  .apple {
+    background-color: #000000;
+  }
+
+  .outlook {
+    background-color: #0078d4;
   }
 </style>
