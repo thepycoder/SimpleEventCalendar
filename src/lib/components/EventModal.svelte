@@ -1,9 +1,57 @@
 <script lang="ts">
+  import "$lib/styles/modal.css";
   import type { CalendarEvent } from "$lib/types/calendar";
   import { createEventDispatcher } from "svelte";
   import { currentUser, userProfile } from "$lib/stores/auth";
 
   const dispatch = createEventDispatcher();
+
+  const DAYS_NL = [
+    "Zondag",
+    "Maandag",
+    "Dinsdag",
+    "Woensdag",
+    "Donderdag",
+    "Vrijdag",
+    "Zaterdag",
+  ];
+  const MONTHS_NL = [
+    "Jan",
+    "Feb",
+    "Mrt",
+    "Apr",
+    "Mei",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Okt",
+    "Nov",
+    "Dec",
+  ];
+
+  function formatEventDateTime(start: Date, end: Date): string {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+
+    const dayName = DAYS_NL[startDate.getDay()];
+    const day = startDate.getDate();
+    const month = MONTHS_NL[startDate.getMonth()];
+    const year = startDate.getFullYear();
+
+    const startTime = startDate.toLocaleTimeString("nl-NL", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const endTime = endDate.toLocaleTimeString("nl-NL", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    const durationMs = endDate.getTime() - startDate.getTime();
+
+    return `${dayName} ${day} ${month}, ${year} van ${startTime} tot ${endTime}`;
+  }
 
   export let event: CalendarEvent;
   export let onClose: () => void;
@@ -49,8 +97,8 @@
           }}
         >
           {event.extendedProps?.attendees?.includes($userProfile.name)
-            ? "Leave Event"
-            : "Join Event"}
+            ? "Ik kom niet"
+            : "Ik kom ook!"}
         </button>
       {/if}
       <button class="close-button" on:click={onClose}>&times;</button>
@@ -59,28 +107,27 @@
     <h2>{event.title}</h2>
 
     <div class="event-time">
-      <strong>When:</strong>
-      {new Date(event.start).toLocaleString()} -
-      {new Date(event.end).toLocaleString()}
+      <strong>Wanneer:</strong>
+      {formatEventDateTime(event.start, event.end)}
     </div>
 
     {#if event.extendedProps?.location}
       <div class="event-location">
-        <strong>Where:</strong>
+        <strong>Waar:</strong>
         {event.extendedProps.location}
       </div>
     {/if}
 
     {#if event.extendedProps?.description}
       <div class="event-description">
-        <strong>Description:</strong>
+        <strong>Beschrijving:</strong>
         <p>{event.extendedProps.description}</p>
       </div>
     {/if}
 
     {#if event.extendedProps?.attendees}
       <div class="event-attendees">
-        <strong>Attendees:</strong>
+        <strong>Vrijwilligers:</strong>
         <ul>
           {#each event.extendedProps.attendees as attendee}
             <li>{attendee}</li>
@@ -92,46 +139,16 @@
 </div>
 
 <style>
-  .modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-  }
-
   .modal {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    min-width: 300px;
     max-width: 500px;
     position: relative;
   }
 
   .modal-buttons {
     position: absolute;
-    top: 10px;
     right: 10px;
     display: flex;
     gap: 10px;
-  }
-
-  .close-button,
-  .edit-button,
-  .join-button,
-  .leave-button {
-    border: none;
-    background: none;
-    font-size: 16px;
-    cursor: pointer;
-    padding: 8px 16px;
-    border-radius: 4px;
   }
 
   .join-button {

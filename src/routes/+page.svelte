@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import Calendar from "@event-calendar/core";
   import { currentUser, userProfile, login, logout, updateProfile } from "$lib/stores/auth";
+  import WelcomeModal from "$lib/components/WelcomeModal.svelte";
   import TimeGrid from "@event-calendar/time-grid";
   import DayGrid from "@event-calendar/day-grid";
   import List from "@event-calendar/list";
@@ -184,7 +185,14 @@
     showModal = true;
   }
 
-  onMount(() => {});
+  let showWelcomeModal = false;
+
+  onMount(() => {
+    // Show welcome modal if no profile exists
+    if (!$userProfile.name && !$userProfile.email) {
+      showWelcomeModal = true;
+    }
+  });
 </script>
 
 <main>
@@ -248,6 +256,10 @@
         />
       </div>
     </div>
+  {/if}
+
+  {#if showWelcomeModal}
+    <WelcomeModal on:close={() => showWelcomeModal = false} />
   {/if}
 </main>
 
