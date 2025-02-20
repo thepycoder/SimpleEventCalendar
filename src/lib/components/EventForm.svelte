@@ -39,6 +39,33 @@
   const dispatch = createEventDispatcher();
   let newAttendeeEmail = "";
   let newAttendeeName = "";
+  let newDocTitle = "";
+  let newDocUrl = "";
+
+  // Initialize documents array if not present
+  if (!event.extendedProps) {
+    event.extendedProps = {};
+  }
+  if (!event.extendedProps.documents) {
+    event.extendedProps.documents = [];
+  }
+
+  function addDocument() {
+    if (newDocTitle && newDocUrl && event.extendedProps) {
+      event.extendedProps.documents = [
+        ...(event.extendedProps.documents || []),
+        { title: newDocTitle, url: newDocUrl }
+      ];
+      newDocTitle = "";
+      newDocUrl = "";
+    }
+  }
+
+  function removeDocument(index: number) {
+    if (event.extendedProps?.documents) {
+      event.extendedProps.documents = event.extendedProps.documents.filter((_, i) => i !== index);
+    }
+  }
 
   function handleSubmit(): void {
     if (!event.title || !event.start || !event.end) {
@@ -153,6 +180,46 @@
       {/if}
     </div>
 
+    <div class="form-group">
+      <label for="minAttendees">Minimum Required Attendees</label>
+      <input
+        id="minAttendees"
+        type="number"
+        min="0"
+        bind:value={event.extendedProps.minAttendees}
+      />
+    </div>
+
+    <div class="form-group">
+      <label>Documents</label>
+      <div class="document-input">
+        <input
+          type="text"
+          bind:value={newDocTitle}
+          placeholder="Document title"
+        />
+        <input
+          type="url"
+          bind:value={newDocUrl}
+          placeholder="Document URL"
+        />
+        <button type="button" class="add-button" on:click={addDocument}>Add</button>
+      </div>
+      {#if event.extendedProps?.documents?.length}
+        <ul class="documents-list">
+          {#each event.extendedProps.documents as doc, i}
+            <li>
+              <span>{doc.title}</span>
+              <div class="document-actions">
+                <a href={doc.url} target="_blank" rel="noopener noreferrer">🔗</a>
+                <button type="button" class="remove-button" on:click={() => removeDocument(i)}>×</button>
+              </div>
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    </div>
+
     <div class="form-actions">
       <button type="submit">{isEdit ? "Update" : "Create"}</button>
       <button type="button" on:click={() => dispatch("cancel")}>Cancel</button>
@@ -244,5 +311,51 @@
   button[type="button"] {
     background: #f44336;
     color: white;
+  }
+
+  .document-input {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .document-input input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .documents-list {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0;
+  }
+
+  .documents-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px;
+    background: #f5f5f5;
+    margin: 5px 0;
+    border-radius: 4px;
+  }
+
+  .document-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .document-actions a {
+    text-decoration: none;
+  }
+
+  .add-button {
+    background: #4caf50;
+  }
+
+  .remove-button {
+    background: #f44336;
+    padding: 2px 8px;
   }
 </style>

@@ -14,6 +14,11 @@ export interface CalendarEvent extends EventInput {
       email: string;
       name: string;
     }>;
+    minAttendees?: number;
+    documents?: Array<{
+      title: string;
+      url: string;
+    }>;
   };
 }
 

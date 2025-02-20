@@ -110,6 +110,31 @@
       </div>
     {/if}
 
+    {#if event.extendedProps?.minAttendees !== undefined}
+      <div class="event-min-attendees">
+        <strong>Minimum benodigde vrijwilligers:</strong>
+        <span>{event.extendedProps.minAttendees}</span>
+        {#if event.extendedProps?.attendees}
+          <span class="attendee-count">
+            (Nu: {event.extendedProps.attendees.length})
+          </span>
+        {/if}
+      </div>
+    {/if}
+
+    {#if event.extendedProps?.documents?.length}
+      <div class="event-documents">
+        <strong>Documenten:</strong>
+        <ul>
+          {#each event.extendedProps.documents as doc}
+            <li>
+              <a href={doc.url} target="_blank" rel="noopener noreferrer">{doc.title}</a>
+            </li>
+          {/each}
+        </ul>
+      </div>
+    {/if}
+
     {#if event.extendedProps?.attendees}
       <div class="event-attendees">
         <div class="attendees-header">
@@ -233,6 +258,30 @@
 
   li {
     padding: 3px 0;
+  }
+
+  .event-min-attendees {
+    margin-bottom: 15px;
+  }
+
+  .attendee-count {
+    margin-left: 10px;
+    color: #666;
+  }
+
+  .event-documents ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 5px 0;
+  }
+
+  .event-documents a {
+    color: #2196f3;
+    text-decoration: none;
+  }
+
+  .event-documents a:hover {
+    text-decoration: underline;
   }
 
   .attendees-header {

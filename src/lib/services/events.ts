@@ -56,6 +56,14 @@ function convertToFirestore(event: Partial<CalendarEvent>) {
     if (event.extendedProps.attendees) {
       firestoreEvent.extendedProps.attendees = event.extendedProps.attendees;
     }
+
+    if (event.extendedProps.minAttendees !== undefined) {
+      firestoreEvent.extendedProps.minAttendees = event.extendedProps.minAttendees;
+    }
+    
+    if (event.extendedProps.documents) {
+      firestoreEvent.extendedProps.documents = event.extendedProps.documents;
+    }
   }
 
   return firestoreEvent;
