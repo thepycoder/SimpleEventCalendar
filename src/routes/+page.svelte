@@ -1,7 +1,13 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import Calendar from "@event-calendar/core";
-  import { currentUser, userProfile, login, logout, updateProfile } from "$lib/stores/auth";
+  import {
+    currentUser,
+    userProfile,
+    login,
+    logout,
+    updateProfile,
+  } from "$lib/stores/auth";
   import WelcomeModal from "$lib/components/WelcomeModal.svelte";
   import TimeGrid from "@event-calendar/time-grid";
   import DayGrid from "@event-calendar/day-grid";
@@ -22,7 +28,7 @@
       html: `
         <div class="event-content">
           <div class="event-title">${info.event.title}</div>
-          ${attendeeCount > 0 ? `<div class="event-attendees">${attendeeCount} attendees</div>` : ""}
+          ${attendeeCount > 0 ? `<div class="event-attendees">${attendeeCount} aanwezig</div>` : ""}
         </div>
       `,
     };
@@ -39,7 +45,7 @@
               ? `
             <div class="event-attendees-list">
               ${attendees.slice(0, 2).join(", ")}
-              ${attendees.length > 2 ? ` +${attendees.length - 2} more` : ""}
+              ${attendees.length > 20 ? ` +${attendees.length - 2} more` : ""}
             </div>
           `
               : ""
@@ -199,14 +205,14 @@
   <div class="header">
     <div class="profile-section">
       <div class="profile-fields">
-        <input 
-          type="text" 
+        <input
+          type="text"
           placeholder="Your name"
           value={$userProfile.name}
           on:change={(e) => updateProfile(e.target.value, $userProfile.email)}
         />
-        <input 
-          type="email" 
+        <input
+          type="email"
           placeholder="Your email"
           value={$userProfile.email}
           on:change={(e) => updateProfile($userProfile.name, e.target.value)}
@@ -235,7 +241,7 @@
       }}
       onEdit={handleEditEvent}
       on:update={({ detail }) => {
-        options.events = options.events.map(e => 
+        options.events = options.events.map((e) =>
           e.id === detail.event.id ? detail.event : e
         );
       }}
@@ -259,7 +265,7 @@
   {/if}
 
   {#if showWelcomeModal}
-    <WelcomeModal on:close={() => showWelcomeModal = false} />
+    <WelcomeModal on:close={() => (showWelcomeModal = false)} />
   {/if}
 </main>
 
@@ -273,7 +279,8 @@
     margin-bottom: 1rem;
   }
 
-  .profile-section, .admin-section {
+  .profile-section,
+  .admin-section {
     display: flex;
     align-items: center;
     gap: 1rem;
