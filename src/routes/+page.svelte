@@ -29,12 +29,29 @@
 
   // Custom event renderers
   function renderEvent(info: EventContentArg) {
-    const attendeeCount = info.event.extendedProps?.attendees?.length || 0;
+    const attendees = info.event.extendedProps?.attendees || [];
+    let attendeeText = "";
+
+    if (attendees.length > 0) {
+      if (attendees.length <= 50) {
+        // Show all names if 50 or fewer
+        attendeeText = attendees.map((a) => a.name).join(", ");
+      } else {
+        // Show first 50 names + count of others
+        const firstFive = attendees
+          .slice(0, 50)
+          .map((a) => a.name)
+          .join(", ");
+        const remaining = attendees.length - 50;
+        attendeeText = `${firstFive} +${remaining} others`;
+      }
+    }
+
     return {
       html: `
         <div class="event-content">
           <div class="event-title">${info.event.title}</div>
-          ${attendeeCount > 0 ? `<div class="event-attendees">${attendeeCount} aanwezig</div>` : ""}
+          ${attendees.length > 0 ? `<div class="event-attendees">${attendeeText}</div>` : ""}
         </div>
       `,
     };

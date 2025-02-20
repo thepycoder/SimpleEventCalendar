@@ -52,3 +52,14 @@ To enable Google authentication:
       - Note: if you get the option to also set up firebase hosting for the app: do so, we'll use it later :)
 4. Copy paste the given snippet into `firebase.ts`
 5. The installation should have prompted you to do install firebase, that is part of this repo's install already
+
+## Firebase setup
+
+We're using firebase for **authentication** of the admin, **hosting** of the webpage and **database** storage from firestore to keep the events in.
+
+So I think it should be
+
+`firebase login`
+`firebase init`
+`pnpm run build`
+`firebase deploy`
