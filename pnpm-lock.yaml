@@ -11,6 +11,9 @@ importers:
       '@sveltejs/adapter-static':
         specifier: ^3.0.8
         version: 3.0.8(@sveltejs/kit@2.17.2(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.2)(vite@6.1.1(@types/node@22.13.4)(yaml@2.7.0)))(svelte@5.20.2)(vite@6.1.1(@types/node@22.13.4)(yaml@2.7.0)))
+      add-to-calendar-button:
+        specifier: ^2.8.1
+        version: 2.8.1
       event-calendar:
         specifier: ^0.8.1
         version: 0.8.1
@@ -775,6 +778,10 @@ packages:
     resolution: {integrity: sha512-cl669nCJTZBsL97OF4kUQm5g5hC2uihk0NxY3WENAC0TYdILVkAyHymAntgxGkl7K+t0cXIrH5siy5S4XkFycA==}
     engines: {node: '>=0.4.0'}
     hasBin: true
+
+  add-to-calendar-button@2.8.1:
+    resolution: {integrity: sha512-bGRuTbbwlIzaEdksL2alZD1YVBx5pemDkgmeIBr30AIuPy0zJjQtOxabySdJtY6BM89alSOjLdb70lcnbTvdUw==}
+    engines: {node: '>=18.17.0', npm: '>=9.6.7'}
 
   agent-base@6.0.2:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
@@ -2738,6 +2745,10 @@ packages:
   through@2.3.8:
     resolution: {integrity: sha512-w89qg7PI8wAdvX60bMDP+bFoD5Dvhm9oLheFp5O4a2QF0cSBGsBX4qZmadPMvVqlLJBBci+WqGGOAPvcDeNSVg==}
 
+  timezones-ical-library@1.9.1:
+    resolution: {integrity: sha512-OBC7oPoQi6JZn6u/2xQcFTMbe1BLjPrv+QUh5jHfYmg0QTR5HnuhwsBqHfvScNTHqTrDxqlXofXzSm2hFDC1Ow==}
+    engines: {node: '>=18.17.0', npm: '>=9.6.7'}
+
   tmp@0.0.33:
     resolution: {integrity: sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw==}
     engines: {node: '>=0.6.0'}
@@ -3775,6 +3786,10 @@ snapshots:
       acorn: 8.14.0
 
   acorn@8.14.0: {}
+
+  add-to-calendar-button@2.8.1:
+    dependencies:
+      timezones-ical-library: 1.9.1
 
   agent-base@6.0.2:
     dependencies:
@@ -6119,6 +6134,8 @@ snapshots:
       xtend: 4.0.2
 
   through@2.3.8: {}
+
+  timezones-ical-library@1.9.1: {}
 
   tmp@0.0.33:
     dependencies:

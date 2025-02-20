@@ -4,39 +4,21 @@
   import { createEventDispatcher } from "svelte";
   import { currentUser, userProfile } from "$lib/stores/auth";
   import { updateEventAttendees } from "$lib/services/events";
+  import { atcb_action } from 'add-to-calendar-button';
 
-  function generateCalendarLinks(event: CalendarEvent) {
-    // Format date to calendar format (YYYYMMDDTHHMMSSZ)
-    function formatDateForCalendar(date: Date): string {
-      return date.toISOString().replace(/-|:|\.\d+/g, "");
-    }
-
-    const start = formatDateForCalendar(new Date(event.start));
-    const end = formatDateForCalendar(new Date(event.end));
-    const title = encodeURIComponent(event.title);
-    const description = encodeURIComponent(
-      event.extendedProps?.description || ""
-    );
-    const location = encodeURIComponent(event.extendedProps?.location || "");
-
-    // Generate links for different calendar types
-    const google = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${description}&location=${location}`;
-
-    // For Apple/Outlook calendar, we'll generate an ICS file
-    const ics = `BEGIN:VCALENDAR
-VERSION:2.0
-BEGIN:VEVENT
-DTSTART:${start}
-DTEND:${end}
-SUMMARY:${event.title}
-DESCRIPTION:${event.extendedProps?.description || ""}
-LOCATION:${event.extendedProps?.location || ""}
-END:VEVENT
-END:VCALENDAR`;
-
+  function generateCalendarConfig(event: CalendarEvent) {
     return {
-      google,
-      ics: "text/calendar;charset=utf-8," + encodeURIComponent(ics),
+      name: event.title,
+      description: event.extendedProps?.description || '',
+      startDate: event.start.toISOString().split('T')[0],
+      endDate: event.end.toISOString().split('T')[0],
+      startTime: event.start.toISOString().split('T')[1].slice(0, 5),
+      endTime: event.end.toISOString().split('T')[1].slice(0, 5),
+      location: event.extendedProps?.location || '',
+      options: ['Google', 'Apple', 'Microsoft365', 'Outlook.com', 'iCal'],
+      timeZone: "Europe/Amsterdam",
+      trigger: "click",
+      iCalFileName: "Reminder-Event",
     };
   }
 
@@ -262,33 +244,12 @@ END:VCALENDAR`;
         <fieldset>
           <legend>Agenda Integratie</legend>
           <div class="calendar-integration">
-            <div class="calendar-buttons">
-              {#if event}
-                {@const calLinks = generateCalendarLinks(event)}
-                <a
-                  href={calLinks.google}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="calendar-button google"
-                >
-                  Google Agenda
-                </a>
-                <a
-                  href={calLinks.ics}
-                  download="event.ics"
-                  class="calendar-button apple"
-                >
-                  Apple Agenda
-                </a>
-                <a
-                  href={calLinks.ics}
-                  download="event.ics"
-                  class="calendar-button outlook"
-                >
-                  Outlook Agenda
-                </a>
-              {/if}
-            </div>
+            <button 
+              class="calendar-button"
+              on:click={() => atcb_action(generateCalendarConfig(event))}
+            >
+              Toevoegen aan agenda
+            </button>
           </div>
         </fieldset>
       </div>
@@ -378,22 +339,23 @@ END:VCALENDAR`;
     padding: 5px 0;
   }
 
-  .calendar-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
   .calendar-button {
-    padding: 8px 16px;
-    border-radius: 4px;
-    text-decoration: none;
-    color: white;
-    font-size: 14px;
-  }
-
-  .calendar-button {
+    width: 100%;
+    padding: 12px;
     background-color: #666;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .calendar-button:hover {
+    background-color: #555;
+  }
+
+  :global(.atcb-button) {
+    background-color: #666 !important;
   }
 
   .occupancy-status {
