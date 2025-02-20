@@ -35,4 +35,20 @@ npm run build
 
 You can preview the production build with `npm run preview`.
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+## Authentication Setup
+
+To enable Google authentication:
+
+1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
+2. Enable Google authentication:
+   - In Firebase Console, go to Authentication > Sign-in method
+   - Click Google provider and enable it
+   - Configure OAuth consent screen if needed
+3. Get your Firebase configuration:
+   - Go to Project Settings > General
+   - Scroll to "Your apps" section
+   - Click the web icon (</>)
+   - Register your app and copy the firebaseConfig object
+      - Note: if you get the option to also set up firebase hosting for the app: do so, we'll use it later :)
+4. Copy paste the given snippet into `firebase.ts`
+5. The installation should have prompted you to do install firebase, that is part of this repo's install already

@@ -4,10 +4,10 @@
   import {
     currentUser,
     userProfile,
-    login,
     logout,
     updateProfile,
   } from "$lib/stores/auth";
+  import GoogleSignInButton from "$lib/components/GoogleSignInButton.svelte";
   import WelcomeModal from "$lib/components/WelcomeModal.svelte";
   import TimeGrid from "@event-calendar/time-grid";
   import DayGrid from "@event-calendar/day-grid";
@@ -239,7 +239,7 @@
         <button on:click={handleCreateEvent}>Create Event</button>
         <button on:click={logout}>Logout</button>
       {:else}
-        <button on:click={login}>Admin Login</button>
+        <GoogleSignInButton />
       {/if}
     </div>
   </div>

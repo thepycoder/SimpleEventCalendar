@@ -1,10 +1,18 @@
 import { writable, get } from 'svelte/store';
+import { auth } from '$lib/firebase';
+import { 
+    signInWithPopup, 
+    GoogleAuthProvider,
+    signOut,
+    onAuthStateChanged 
+} from 'firebase/auth';
 
-// Admin user type
+// Update User interface to match Firebase user properties
 export interface User {
     id: string;
-    name: string;
-    email: string;
+    name: string | null;
+    email: string | null;
+    photoURL?: string | null;
 }
 
 // Public visitor profile
@@ -61,17 +69,49 @@ userProfile.subscribe(profile => {
     }
 });
 
-// Admin authentication functions
-export function login() {
-    currentUser.set({
-        id: '1',
-        name: 'Admin User',
-        email: 'admin@example.com'
-    });
+// Authentication functions
+export async function login() {
+    try {
+        const provider = new GoogleAuthProvider();
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        
+        currentUser.set({
+            id: user.uid,
+            name: user.displayName,
+            email: user.email,
+            photoURL: user.photoURL
+        });
+    } catch (error) {
+        console.error('Login failed:', error);
+        throw error;
+    }
 }
 
-export function logout() {
-    currentUser.set(null);
+export async function logout() {
+    try {
+        await signOut(auth);
+        currentUser.set(null);
+    } catch (error) {
+        console.error('Logout failed:', error);
+        throw error;
+    }
+}
+
+// Add auth state listener
+if (typeof window !== 'undefined') {
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            currentUser.set({
+                id: user.uid,
+                name: user.displayName,
+                email: user.email,
+                photoURL: user.photoURL
+            });
+        } else {
+            currentUser.set(null);
+        }
+    });
 }
 
 // Public profile update
