@@ -73,42 +73,44 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="modal-backdrop" on:click={handleOutsideClick}>
   <div class="modal">
-    <div class="modal-buttons">
-      {#if $currentUser}
-        <button class="edit-button" on:click={() => onEdit(event)}>Edit</button>
-      {/if}
-      {#if $userProfile.name && $userProfile.email}
-        <button
-          class={event.extendedProps?.attendees?.some(a => a.email === $userProfile.email)
-            ? "leave-button"
-            : "join-button"}
-          on:click={() => {
-            if (event.extendedProps) {
-              if (event.extendedProps.attendees?.some(a => a.email === $userProfile.email)) {
-                event.extendedProps.attendees =
-                  event.extendedProps.attendees.filter(
-                    (a) => a.email !== $userProfile.email
-                  );
-              } else {
-                event.extendedProps.attendees = [
-                  ...(event.extendedProps.attendees || []),
-                  {
-                    email: $userProfile.email,
-                    name: $userProfile.name || $userProfile.email
-                  }
-                ];
+    <div class="modal-header">
+      <div class="action-buttons">
+        {#if $currentUser}
+          <button class="edit-button" on:click={() => onEdit(event)}>Edit</button>
+        {/if}
+        {#if $userProfile.name && $userProfile.email}
+          <button
+            class={event.extendedProps?.attendees?.some(a => a.email === $userProfile.email)
+              ? "leave-button"
+              : "join-button"}
+            on:click={() => {
+              if (event.extendedProps) {
+                if (event.extendedProps.attendees?.some(a => a.email === $userProfile.email)) {
+                  event.extendedProps.attendees =
+                    event.extendedProps.attendees.filter(
+                      (a) => a.email !== $userProfile.email
+                    );
+                } else {
+                  event.extendedProps.attendees = [
+                    ...(event.extendedProps.attendees || []),
+                    {
+                      email: $userProfile.email,
+                      name: $userProfile.name || $userProfile.email
+                    }
+                  ];
+                }
+                // Update the event without opening the form
+                const updatedEvent = { ...event };
+                dispatch("update", { event: updatedEvent });
               }
-              // Update the event without opening the form
-              const updatedEvent = { ...event };
-              dispatch("update", { event: updatedEvent });
-            }
-          }}
-        >
-          {event.extendedProps?.attendees?.some(a => a.email === $userProfile.email)
-            ? "Ik kom niet"
-            : "Ik kom ook!"}
-        </button>
-      {/if}
+            }}
+          >
+            {event.extendedProps?.attendees?.some(a => a.email === $userProfile.email)
+              ? "Ik kom niet"
+              : "Ik kom ook!"}
+          </button>
+        {/if}
+      </div>
       <button class="close-button" on:click={onClose}>&times;</button>
     </div>
 
@@ -163,9 +165,14 @@
     position: relative;
   }
 
-  .modal-buttons {
-    position: absolute;
-    right: 10px;
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .action-buttons {
     display: flex;
     gap: 10px;
   }

@@ -28,7 +28,8 @@
   export let isEdit = false;
 
   const dispatch = createEventDispatcher();
-  let newAttendee = "";
+  let newAttendeeEmail = "";
+  let newAttendeeName = "";
 
   function handleSubmit() {
     if (!event.title || !event.start || !event.end) {
@@ -40,12 +41,16 @@
   }
 
   function addAttendee() {
-    if (newAttendee && event.extendedProps) {
+    if (newAttendeeEmail && newAttendeeName && event.extendedProps) {
       event.extendedProps.attendees = [
         ...(event.extendedProps.attendees || []),
-        newAttendee,
+        {
+          email: newAttendeeEmail,
+          name: newAttendeeName
+        }
       ];
-      newAttendee = "";
+      newAttendeeEmail = "";
+      newAttendeeName = "";
     }
   }
 
@@ -101,8 +106,29 @@
       <div class="attendee-input">
         <input
           type="text"
-          bind:value={newAttendee}
-          placeholder="Add attendee by using their email address"
+          bind:value={newAttendeeName}
+          placeholder="Name"
+          on:keydown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              if (newAttendeeName && newAttendeeEmail) {
+                addAttendee();
+              }
+            }
+          }}
+        />
+        <input
+          type="email"
+          bind:value={newAttendeeEmail}
+          placeholder="Email address"
+          on:keydown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              if (newAttendeeName && newAttendeeEmail) {
+                addAttendee();
+              }
+            }
+          }}
         />
         <button type="button" on:click={addAttendee}>Add</button>
       </div>
@@ -110,9 +136,8 @@
         <ul class="attendees-list">
           {#each event.extendedProps.attendees as attendee, i}
             <li>
-              {attendee}
-              <button type="button" on:click={() => removeAttendee(i)}>×</button
-              >
+              {attendee.name} ({attendee.email})
+              <button type="button" on:click={() => removeAttendee(i)}>×</button>
             </li>
           {/each}
         </ul>
@@ -158,10 +183,12 @@
   .attendee-input {
     display: flex;
     gap: 10px;
+    margin-bottom: 10px;
   }
 
   .attendee-input input {
     flex: 1;
+    min-width: 0;
   }
 
   .join-button {
