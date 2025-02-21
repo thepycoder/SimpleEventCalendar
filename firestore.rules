@@ -1,14 +1,33 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Function to check if user has made too many requests
+    function notTooManyEmails() {
+      let recentEmails = getAfter(/databases/$(database)/documents/system)
+        .where('createdAt', '>', request.time.toMillis() - 3600000) // 1 hour window
+        .where('attendeeEmail', '==', request.resource.data.attendeeEmail)
+        .count();
+      return recentEmails < 5; // Max 5 emails per hour per email address
+    }
+
     match /events/{eventId} {
       allow read: if true;
-      // Allow create/delete for authenticated users (admins)
       allow create, delete: if request.auth != null;
-      // Allow updates from anyone, but only for the attendees field
       allow update: if request.auth != null || 
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['extendedProps']) &&
          request.resource.data.extendedProps.diff(resource.data.extendedProps).affectedKeys().hasOnly(['attendees']));
+    }
+    
+    match /system/{mailId} {
+      allow create: if 
+        // Must include timestamp
+        request.resource.data.createdAt is timestamp &&
+        // Must have required email fields
+        request.resource.data.to is string &&
+        request.resource.data.message.subject is string &&
+        // Check rate limit
+        notTooManyEmails();
+      allow read, update, delete: if false;
     }
   }
 }
