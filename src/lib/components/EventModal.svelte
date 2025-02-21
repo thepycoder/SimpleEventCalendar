@@ -4,6 +4,7 @@
   import { createEventDispatcher } from "svelte";
   import { currentUser, userProfile } from "$lib/stores/auth";
   import { updateEventAttendees } from "$lib/services/events";
+  import { sendEventJoinEmail } from '$lib/services/email';
   import { atcb_action } from 'add-to-calendar-button';
 
   function generateCalendarConfig(event: CalendarEvent) {
@@ -208,21 +209,37 @@
                   : "join-button"}
                 on:click={async () => {
                   if (event.extendedProps) {
-                    const newAttendees = event.extendedProps.attendees?.some(
+                    const isJoining = !event.extendedProps.attendees?.some(
                       (a) => a.email === $userProfile.email
-                    )
-                      ? event.extendedProps.attendees.filter(
-                          (a) => a.email !== $userProfile.email
-                        )
-                      : [
+                    );
+
+                    const newAttendees = isJoining
+                      ? [
                           ...(event.extendedProps.attendees || []),
                           {
                             email: $userProfile.email,
                             name: $userProfile.name || $userProfile.email,
                           },
-                        ];
+                        ]
+                      : event.extendedProps.attendees.filter(
+                          (a) => a.email !== $userProfile.email
+                        );
 
                     event.extendedProps.attendees = newAttendees;
+
+                    // Send confirmation email if joining
+                    if (isJoining) {
+                      try {
+                        await sendEventJoinEmail(
+                          event,
+                          $userProfile.email,
+                          $userProfile.name || $userProfile.email
+                        );
+                      } catch (error) {
+                        console.error('Failed to send confirmation email:', error);
+                        // Continue with join even if email fails
+                      }
+                    }
 
                     dispatch("update", {
                       event: event,

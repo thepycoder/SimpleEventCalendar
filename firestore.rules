@@ -1,17 +1,6 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Function to check if user has made too many requests
-    function notTooManyEmails() {
-      let ms = duration.value(1, 'h').seconds() * 1000;
-      let recentTime = request.time.toMillis() - ms;
-      let recentEmails = getAfter(/databases/$(database)/documents/system)
-        .where('createdAt', '>', recentTime)
-        .where('attendeeEmail', '==', request.resource.data.attendeeEmail)
-        .size();
-      return recentEmails < 5; // Max 5 emails per hour per email address
-    }
-
     match /events/{eventId} {
       allow read: if true;
       allow create, delete: if request.auth != null;
@@ -29,12 +18,17 @@ service cloud.firestore {
         request.resource.data.message.subject is string &&
         // Must have eventId and attendeeEmail for tracking
         request.resource.data.eventId is string &&
-        request.resource.data.attendeeEmail is string &&
-        // Check rate limit
-        notTooManyEmails() &&
-        // Allow unauthenticated users
-        (true);
-      allow read, update, delete: if false;
+        request.resource.data.attendeeEmail is string;
+      allow read: if 
+        request.query.limit == null || request.query.limit <= 1 &&
+        request.query.filters.length == 2 &&
+        request.query.filters[0].op == '==' &&
+        request.query.filters[1].op == '==' &&
+        (
+          (request.query.filters[0].path == 'eventId' && request.query.filters[1].path == 'attendeeEmail') ||
+          (request.query.filters[0].path == 'attendeeEmail' && request.query.filters[1].path == 'eventId')
+        );
+      allow update, delete: if false;
     }
   }
 }
