@@ -3,10 +3,12 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Function to check if user has made too many requests
     function notTooManyEmails() {
+      let ms = duration.value(1, 'h').seconds() * 1000;
+      let recentTime = request.time.toMillis() - ms;
       let recentEmails = getAfter(/databases/$(database)/documents/system)
-        .where('createdAt', '>', request.time.toMillis() - 3600000) // 1 hour window
+        .where('createdAt', '>', recentTime)
         .where('attendeeEmail', '==', request.resource.data.attendeeEmail)
-        .count();
+        .size();
       return recentEmails < 5; // Max 5 emails per hour per email address
     }
 
@@ -25,8 +27,13 @@ service cloud.firestore {
         // Must have required email fields
         request.resource.data.to is string &&
         request.resource.data.message.subject is string &&
+        // Must have eventId and attendeeEmail for tracking
+        request.resource.data.eventId is string &&
+        request.resource.data.attendeeEmail is string &&
         // Check rate limit
-        notTooManyEmails();
+        notTooManyEmails() &&
+        // Allow unauthenticated users
+        (true);
       allow read, update, delete: if false;
     }
   }
