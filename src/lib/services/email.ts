@@ -28,6 +28,13 @@ export async function sendEventJoinEmail(event: CalendarEvent, attendeeEmail: st
   });
 
   // Create HTML email content
+  // Format document links if they exist
+  const documentLinks = event.extendedProps?.documents 
+    ? event.extendedProps.documents
+        .map(doc => `<p><a href="${doc.url}">${doc.title}</a></p>`)
+        .join('\n')
+    : '';
+
   const htmlContent = `
     <h2>Bedankt voor je aanmelding!</h2>
     <p>Beste ${attendeeName},</p>
@@ -37,11 +44,19 @@ export async function sendEventJoinEmail(event: CalendarEvent, attendeeEmail: st
       <p><strong>Wanneer:</strong> ${startTime}</p>
       ${event.extendedProps?.location ? `<p><strong>Waar:</strong> ${event.extendedProps.location}</p>` : ''}
       ${event.extendedProps?.description ? `<p><strong>Beschrijving:</strong> ${event.extendedProps.description}</p>` : ''}
+      ${documentLinks ? `<div style="margin-top: 15px;"><strong>Documenten:</strong>${documentLinks}</div>` : ''}
     </div>
     <p>We kijken ernaar uit je te zien!</p>
   `;
 
   // Create plain text version
+  const documentLinksText = event.extendedProps?.documents
+    ? '\n\nDocumenten:\n' + 
+      event.extendedProps.documents
+        .map(doc => `${doc.title}: ${doc.url}`)
+        .join('\n')
+    : '';
+
   const textContent = `
     Bedankt voor je aanmelding!
     
@@ -52,7 +67,7 @@ export async function sendEventJoinEmail(event: CalendarEvent, attendeeEmail: st
     ${event.title}
     Wanneer: ${startTime}
     ${event.extendedProps?.location ? `Waar: ${event.extendedProps.location}` : ''}
-    ${event.extendedProps?.description ? `Beschrijving: ${event.extendedProps.description}` : ''}
+    ${event.extendedProps?.description ? `Beschrijving: ${event.extendedProps.description}` : ''}${documentLinksText}
     
     We kijken ernaar uit je te zien!
   `;

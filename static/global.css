@@ -23,31 +23,10 @@ body {
 }
 
 .ec {
-	height: 640px;
+	height: 80vh;
 }
 .ec.ec-day-grid {
-	height: 400px;
-}
-@media (min-width: 576px) {
-	.ec {
-		height: 700px;
-	}
-	.ec.ec-day-grid {
-		height: 500px;
-	}
-}
-@media (min-width: 992px) {
-	.ec {
-		height: 800px;
-	}
-	.ec.ec-day-grid {
-		height: 700px;
-	}
-}
-@media (min-width: 1200px) {
-	.ec.ec-day-grid {
-		height: 800px;
-	}
+	height: 80vh;
 }
 
 /* Dark theme */
