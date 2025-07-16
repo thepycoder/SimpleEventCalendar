@@ -121,6 +121,7 @@
     },
     events: [],
     eventClick: handleEventClick,
+    firstDay: 1,
   };
 
   // Modal state
