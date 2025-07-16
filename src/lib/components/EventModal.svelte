@@ -181,10 +181,10 @@
             <div class="event-attendees">
               <div class="attendees-header">
                 <strong>Vrijwilligers:</strong>
-                {#if $currentUser}
+                {#if $currentUser && event.extendedProps?.attendees}
                   <button
                     class="copy-button"
-                    on:click={() => copyEmails(event.extendedProps.attendees)}
+                    on:click={() => copyEmails(event.extendedProps?.attendees || [])}
                     title="Copy all email addresses"
                   >
                     📋
@@ -221,7 +221,7 @@
                             name: $userProfile.name || $userProfile.email,
                           },
                         ]
-                      : event.extendedProps.attendees.filter(
+                      : (event.extendedProps.attendees || []).filter(
                           (a) => a.email !== $userProfile.email
                         );
 
@@ -263,7 +263,7 @@
           <div class="calendar-integration">
             <button 
               class="calendar-button"
-              on:click={() => atcb_action(generateCalendarConfig(event))}
+              on:click={() => atcb_action(generateCalendarConfig(event) as any)}
             >
               Toevoegen aan agenda
             </button>

@@ -9,6 +9,24 @@ service cloud.firestore {
          request.resource.data.extendedProps.diff(resource.data.extendedProps).affectedKeys().hasOnly(['attendees']));
     }
     
+    match /subscribers/{subscriberId} {
+      // Anyone can subscribe/unsubscribe with their email
+      allow create: if 
+        request.resource.data.email is string &&
+        request.resource.data.name is string &&
+        request.resource.data.subscribedAt is timestamp;
+      // Allow querying by email to check subscription status
+      allow read: if 
+        request.query.limit == null || request.query.limit <= 1 &&
+        request.query.filters.size() == 1 &&
+        request.query.filters[0].op == '==' &&
+        request.query.filters[0].path == 'email';
+      // Anyone can delete their own subscription by email
+      allow delete: if true;
+      // Admins can read all subscribers for sending notifications
+      allow list: if request.auth != null;
+    }
+    
     match /system/{mailId} {
       allow create: if 
         // Must include timestamp
@@ -16,9 +34,11 @@ service cloud.firestore {
         // Must have required email fields
         request.resource.data.to is string &&
         request.resource.data.message.subject is string &&
-        // Must have eventId and attendeeEmail for tracking
-        request.resource.data.eventId is string &&
-        request.resource.data.attendeeEmail is string;
+        // For event join emails: must have eventId and attendeeEmail
+        (request.resource.data.eventId is string &&
+         request.resource.data.attendeeEmail is string) ||
+        // For notification emails: must have notificationType
+        request.resource.data.notificationType is string;
       allow read: if 
         request.query.limit == null || request.query.limit <= 1 &&
         request.query.filters.length == 2 &&

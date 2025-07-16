@@ -48,6 +48,7 @@
   let newAttendeeName = "";
   let newDocTitle = "";
   let newDocUrl = "";
+  let sendNotifications = true; // Default to true
 
   // Initialize documents array if not present
   if (!event.extendedProps) {
@@ -82,7 +83,7 @@
       return;
     }
 
-    dispatch("save", { event });
+    dispatch("save", { event, sendNotifications });
   }
 
   function addAttendee() {
@@ -177,6 +178,24 @@
               rows="4"
               placeholder="Event description..."
             ></textarea>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Notifications</legend>
+          <div class="form-group">
+            <label class="notification-checkbox">
+              <input
+                type="checkbox"
+                bind:checked={sendNotifications}
+              />
+              <span class="checkbox-text">
+                Stuur email notificaties naar alle geabonneerden
+              </span>
+            </label>
+            <p class="notification-help">
+              Als dit aangevinkt is, ontvangen alle mensen die zich hebben ingeschreven voor notificaties een email over dit {isEdit ? "bijgewerkte" : "nieuwe"} evenement.
+            </p>
           </div>
         </fieldset>
       </div>
@@ -386,6 +405,30 @@
     height: 30px;
     border-radius: 4px;
     border: 1px solid #ddd;
+  }
+
+  .notification-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .notification-checkbox input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .checkbox-text {
+    user-select: none;
+  }
+
+  .notification-help {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
   }
 
   .attendee-input,

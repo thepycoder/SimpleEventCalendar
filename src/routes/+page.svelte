@@ -14,8 +14,10 @@
     updateEventAttendees,
     deleteEvent,
   } from "$lib/services/events";
+  import { sendEventNotificationToSubscribers } from "$lib/services/email";
   import GoogleSignInButton from "$lib/components/GoogleSignInButton.svelte";
   import WelcomeModal from "$lib/components/WelcomeModal.svelte";
+  import EmailSubscription from "$lib/components/EmailSubscription.svelte";
   import TimeGrid from "@event-calendar/time-grid";
   import DayGrid from "@event-calendar/day-grid";
   import List from "@event-calendar/list";
@@ -143,19 +145,40 @@
   }
 
   async function handleSaveEvent(
-    event: CustomEvent<{ event: CalendarEvent }>
+    event: CustomEvent<{ event: CalendarEvent; sendNotifications: boolean }>
   ): Promise<void> {
     try {
       const eventData = event.detail.event;
+      const shouldNotify = event.detail.sendNotifications;
 
       if (isEditMode && selectedEvent) {
         await updateEvent({ ...eventData, id: selectedEvent.id });
         calendarEvents = calendarEvents.map((e) =>
           e.id === selectedEvent.id ? { ...eventData, id: selectedEvent.id } : e
         );
+
+        // Send notification for updated event if requested
+        if (shouldNotify) {
+          try {
+            await sendEventNotificationToSubscribers({ ...eventData, id: selectedEvent.id }, true);
+          } catch (error) {
+            console.error("Failed to send update notifications:", error);
+            // Don't fail the save operation if email fails
+          }
+        }
       } else {
         const newEvent = await createEvent(eventData);
         calendarEvents = [...calendarEvents, newEvent];
+
+        // Send notification for new event if requested
+        if (shouldNotify) {
+          try {
+            await sendEventNotificationToSubscribers(newEvent, false);
+          } catch (error) {
+            console.error("Failed to send creation notifications:", error);
+            // Don't fail the save operation if email fails
+          }
+        }
       }
 
       options = {
@@ -216,6 +239,7 @@
           on:change={(e) => updateProfile($userProfile.name, e.target.value)}
         />
       </div>
+      <EmailSubscription />
     </div>
     <div class="admin-section">
       {#if $currentUser}
@@ -305,6 +329,7 @@
     padding: 1rem;
     background-color: #f5f5f5;
     margin-bottom: 1rem;
+    gap: 1rem;
   }
 
   .profile-section,
@@ -328,6 +353,7 @@
   .profile-fields {
     display: flex;
     gap: 0.5rem;
+    align-items: center;
   }
 
   .profile-fields input {
@@ -369,6 +395,65 @@
     max-width: 1000px;
     width: 100%;
   }
+
+  /* Mobile responsive design */
+  @media (max-width: 768px) {
+    .header {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1rem;
+      padding: 1rem 0.5rem;
+    }
+
+    .profile-section {
+      flex-direction: column;
+      gap: 0.75rem;
+      align-items: stretch;
+    }
+
+    .profile-fields {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .profile-fields input {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .admin-section {
+      flex-direction: column;
+      gap: 0.75rem;
+      align-items: stretch;
+    }
+
+    .admin-section button {
+      width: 100%;
+      text-align: center;
+    }
+
+    .modal-content {
+      margin: 10px;
+      width: calc(100% - 20px);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .header {
+      padding: 0.75rem 0.25rem;
+    }
+
+    .profile-fields input {
+      font-size: 16px; /* Prevents zoom on iOS */
+      padding: 8px;
+    }
+
+    button {
+      padding: 10px 16px;
+      font-size: 14px;
+    }
+  }
+
   :global(.event-content) {
     padding: 2px 4px;
     overflow: hidden;
