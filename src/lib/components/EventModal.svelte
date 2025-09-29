@@ -77,6 +77,80 @@
     return `${dayName} ${day} ${month}, ${year} van ${startTime} tot ${endTime}`;
   }
 
+  // Safely render basic text markup (bullet points and paragraphs) without extra deps
+  function escapeHtml(text: string): string {
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function formatDescriptionToHtml(input: string | undefined): string {
+    if (!input) return "";
+    const escaped = escapeHtml(input);
+    const lines = escaped.split(/\r?\n/);
+    let html = "";
+    let inList = false;
+    let paragraphLines: string[] = [];
+
+    function flushParagraph() {
+      if (paragraphLines.length) {
+        html += `<p>${paragraphLines.join('<br>')}</p>`;
+        paragraphLines = [];
+      }
+    }
+
+    for (const raw of lines) {
+      const line = raw.trim();
+      const bullet = line.match(/^([\-*•])\s+(.*)$/);
+
+      if (bullet) {
+        // Close any open paragraph before starting/continuing a list
+        flushParagraph();
+        if (!inList) {
+          html += '<ul>';
+          inList = true;
+        }
+        html += `<li>${bullet[2]}</li>`;
+        continue;
+      }
+
+      if (line === "") {
+        // Blank line separates paragraphs; also closes an open list
+        if (inList) {
+          html += '</ul>';
+          inList = false;
+        }
+        flushParagraph();
+        continue;
+      }
+
+      // Normal text line
+      if (inList) {
+        html += '</ul>';
+        inList = false;
+      }
+      paragraphLines.push(line);
+    }
+
+    // Flush any remaining structures
+    if (inList) html += '</ul>';
+    flushParagraph();
+    return html;
+  }
+
+  function getDescriptionHtml(input: string | undefined): string {
+    if (!input) return "";
+    // If looks like HTML we assume it's already sanitized and render as-is
+    if (/<\s*(p|br|ul|ol|li|strong|em|u|a)\b/i.test(input)) {
+      return input;
+    }
+    // Fallback: convert plaintext with simple bullets/paragraphs
+    return formatDescriptionToHtml(input);
+  }
+
   export let event: CalendarEvent;
   export let onClose: () => void;
   export let onEdit: (event: CalendarEvent) => void;
@@ -98,6 +172,12 @@
           <button class="edit-button" on:click={() => onEdit(event)}
             >Edit</button
           >
+          <button
+            class="duplicate-button"
+            on:click={() => dispatch("duplicate", { event })}
+          >
+            Duplicate
+          </button>
           <button
             class="delete-button"
             on:click={() => dispatch("delete", { event })}>Delete</button
@@ -130,7 +210,9 @@
           {#if event.extendedProps?.description}
             <div class="event-description">
               <strong>Beschrijving:</strong>
-              <p>{event.extendedProps.description}</p>
+              <div class="rich-description">
+                {@html getDescriptionHtml(event.extendedProps.description)}
+              </div>
             </div>
           {/if}
         </fieldset>
@@ -339,7 +421,7 @@
     margin-bottom: 15px;
   }
 
-  .event-description p {
+  .event-description :global(p) {
     margin: 5px 0;
     line-height: 1.4;
   }
@@ -399,6 +481,20 @@
     margin-top: 10px;
   }
 
+  .duplicate-button {
+    margin: 0 8px;
+    padding: 6px 12px;
+    background-color: #2196f3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .duplicate-button:hover {
+    background-color: #1976d2;
+  }
+
   .join-button {
     background-color: #4caf50;
   }
@@ -431,10 +527,6 @@
     fieldset {
       padding: 10px;
       margin-bottom: 15px;
-    }
-
-    .calendar-buttons {
-      flex-direction: column;
     }
 
     .calendar-button {

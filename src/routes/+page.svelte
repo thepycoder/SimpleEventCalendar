@@ -144,6 +144,18 @@
     showEventForm = true;
   }
 
+  function prepareDuplicatedEvent(source: CalendarEvent): CalendarEvent {
+    return {
+      ...source,
+      id: '' as unknown as string,
+      title: `${source.title} (copy)`,
+      extendedProps: {
+        ...(source.extendedProps || {}),
+        attendees: [],
+      },
+    };
+  }
+
   async function handleSaveEvent(
     event: CustomEvent<{ event: CalendarEvent; sendNotifications: boolean }>
   ): Promise<void> {
@@ -262,6 +274,13 @@
         selectedEvent = null;
       }}
       onEdit={handleEditEvent}
+      on:duplicate={({ detail }) => {
+        const duplicated = prepareDuplicatedEvent(detail.event);
+        selectedEvent = duplicated;
+        isEditMode = false;
+        showModal = false;
+        showEventForm = true;
+      }}
       on:delete={async ({ detail }) => {
         if (confirm("Are you sure you want to delete this event?")) {
           try {

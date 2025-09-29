@@ -1,7 +1,8 @@
 <script lang="ts">
   import type { CalendarEvent } from "$lib/types/calendar";
-  import { createEventDispatcher } from "svelte";
-  import { userProfile } from "$lib/stores/auth";
+  import { createEventDispatcher, onMount } from "svelte";
+  import { currentUser } from "$lib/stores/auth";
+  import 'quill/dist/quill.snow.css';
 
   // Format date for datetime-local input
   function formatDateForInput(date: Date | null): string {
@@ -17,7 +18,9 @@
   }
 
   // Default event or format existing event dates
-  export let event: Partial<CalendarEvent> = {
+  export let event: Partial<CalendarEvent> & {
+    extendedProps: NonNullable<CalendarEvent['extendedProps']>;
+  } = {
     title: "",
     start: new Date(),
     end: new Date(Date.now() + 3600000),
@@ -50,10 +53,12 @@
   let newDocUrl = "";
   let sendNotifications = true; // Default to true
 
+  // Quill editor state (admin only)
+  let quill: any = null;
+  let quillContainer: HTMLDivElement | null = null;
+  let descriptionHtml: string = event.extendedProps.description || "";
+
   // Initialize documents array if not present
-  if (!event.extendedProps) {
-    event.extendedProps = {};
-  }
   if (!event.extendedProps.documents) {
     event.extendedProps.documents = [];
   }
@@ -77,10 +82,33 @@
     }
   }
 
-  function handleSubmit(): void {
+  async function handleSubmit(): Promise<void> {
     if (!event.title || !event.start || !event.end) {
       alert("Please fill in all required fields");
       return;
+    }
+
+    // Pull the latest HTML from Quill if available
+    if ($currentUser && quill) {
+      descriptionHtml = quill.root.innerHTML;
+    }
+
+    // Sanitize description before saving (client-side only)
+    if (typeof window !== 'undefined') {
+      try {
+        const { default: DOMPurify } = await import('dompurify');
+        const clean = DOMPurify.sanitize(descriptionHtml || "", {
+          ALLOWED_TAGS: ['p','br','ul','ol','li','strong','em','u','a'],
+          ALLOWED_ATTR: ['href','target','rel']
+        });
+        event.extendedProps.description = clean;
+      } catch (err) {
+        // Fallback: store raw HTML if sanitizer fails (unlikely)
+        event.extendedProps.description = descriptionHtml || event.extendedProps.description;
+      }
+    } else {
+      // SSR fallback (should not happen on submit)
+      event.extendedProps.description = descriptionHtml || event.extendedProps.description;
     }
 
     dispatch("save", { event, sendNotifications });
@@ -107,6 +135,35 @@
       );
     }
   }
+  onMount(async () => {
+    if (!$currentUser) return;
+    try {
+      const { default: Quill } = await import('quill');
+      const toolbarOptions = [
+        ['bold', 'italic', 'underline'],
+        [{ list: 'bullet' }],
+        ['link']
+      ];
+      if (quillContainer) {
+        quill = new Quill(quillContainer, {
+          theme: 'snow',
+          modules: { toolbar: toolbarOptions }
+        });
+        // Initialize content
+        if (descriptionHtml) {
+          quill.root.innerHTML = descriptionHtml;
+        } else if (event.extendedProps.description) {
+          quill.root.innerHTML = event.extendedProps.description;
+        }
+        quill.on('text-change', () => {
+          descriptionHtml = quill.root.innerHTML;
+        });
+      }
+    } catch (e) {
+      console.error('Failed to initialize Quill:', e);
+    }
+  });
+
 </script>
 
 <div class="event-form">
@@ -148,6 +205,7 @@
             <input
               id="location"
               type="text"
+              aria-labelledby="location"
               bind:value={event.extendedProps.location}
               placeholder="Event location"
             />
@@ -172,12 +230,19 @@
         <fieldset>
           <legend>Description</legend>
           <div class="form-group">
-            <textarea
-              id="description"
-              bind:value={event.extendedProps.description}
-              rows="4"
-              placeholder="Event description..."
-            ></textarea>
+            {#if $currentUser}
+              <div class="quill-wrapper">
+                <div class="quill-toolbar-hint">Use the toolbar for bold, italics, lists and links.</div>
+                <div bind:this={quillContainer} class="quill-editor"></div>
+              </div>
+            {:else}
+              <textarea
+                id="description"
+                bind:value={event.extendedProps.description}
+                rows="4"
+                placeholder="Event description..."
+              ></textarea>
+            {/if}
           </div>
         </fieldset>
 
@@ -205,11 +270,12 @@
         <fieldset>
           <legend>Attendee Management</legend>
           <div class="form-group">
-            <label>Minimum Required Attendees</label>
+            <label for="min-attendees">Minimum Required Attendees</label>
             <div class="min-attendees-input">
               <input
                 type="number"
                 min="0"
+                id="min-attendees"
                 bind:value={event.extendedProps.minAttendees}
               />
               {#if event.extendedProps?.minAttendees !== undefined}
@@ -226,10 +292,11 @@
           </div>
 
           <div class="form-group">
-            <label>Add Attendee</label>
+            <label for="add-attendee-name">Add Attendee</label>
             <div class="attendee-input">
               <input
                 type="text"
+                id="add-attendee-name"
                 bind:value={newAttendeeName}
                 placeholder="Name"
                 on:keydown={(e) => {
@@ -241,6 +308,7 @@
               />
               <input
                 type="email"
+                id="add-attendee-email"
                 bind:value={newAttendeeEmail}
                 placeholder="Email"
                 on:keydown={(e) => {

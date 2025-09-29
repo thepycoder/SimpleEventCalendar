@@ -2,21 +2,17 @@
 
 Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
 
-## Creating a project
+## Installing the deps
 
-If you're seeing this, you've probably already done this step. Congrats!
+To install the project using node, run:
 
 ```bash
-# create a new project in the current directory
-npx sv create
-
-# create a new project in my-app
-npx sv create my-app
+npm install
 ```
 
 ## Developing
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Once you've installed the dependencies, you can run a dev server locally by running:
 
 ```bash
 npm run dev
