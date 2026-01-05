@@ -9,6 +9,7 @@
   } from "$lib/stores/auth";
   import {
     fetchEvents,
+    fetchEventById,
     createEvent,
     updateEvent,
     updateEventAttendees,
@@ -206,31 +207,105 @@
     }
   }
 
+  // URL handling for deep-linking to events
+  function getEventIdFromUrl(): string | null {
+    if (typeof window === "undefined") return null;
+    const params = new URLSearchParams(window.location.search);
+    return params.get("event");
+  }
+
+  function updateUrlWithEvent(eventId: string | null): void {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (eventId) {
+      url.searchParams.set("event", eventId);
+    } else {
+      url.searchParams.delete("event");
+    }
+    window.history.pushState({}, "", url.toString());
+  }
+
+  function openEventById(eventId: string): void {
+    // First try to find it in already-loaded events
+    const event = calendarEvents.find((e) => e.id === eventId);
+    if (event) {
+      selectedEvent = event;
+      showModal = true;
+      updateUrlWithEvent(eventId);
+      return;
+    }
+    // If not found locally, fetch from Firestore
+    fetchEventById(eventId).then((event) => {
+      if (event) {
+        selectedEvent = event;
+        showModal = true;
+        updateUrlWithEvent(eventId);
+      } else {
+        console.warn("Event not found:", eventId);
+        // Clear the invalid event ID from URL
+        updateUrlWithEvent(null);
+      }
+    });
+  }
+
   // Handle event clicks
   function handleEventClick(info: EventClickInfo) {
     selectedEvent = info.event;
     showModal = true;
+    updateUrlWithEvent(info.event.id);
+  }
+
+  function closeModal(): void {
+    showModal = false;
+    selectedEvent = null;
+    updateUrlWithEvent(null);
+  }
+
+  // Handle browser back/forward navigation
+  function handlePopState(): void {
+    const eventId = getEventIdFromUrl();
+    if (eventId && !showModal) {
+      openEventById(eventId);
+    } else if (!eventId && showModal) {
+      showModal = false;
+      selectedEvent = null;
+    }
   }
 
   let showWelcomeModal = false;
 
   let calendarEvents: CalendarEvent[] = [];
 
-  onMount(async () => {
-    try {
-      calendarEvents = await fetchEvents();
-      options = {
-        ...options,
-        events: calendarEvents,
-      };
-    } catch (error) {
-      console.error("Error fetching events:", error);
-    }
+  onMount(() => {
+    // Load events asynchronously
+    fetchEvents()
+      .then((events) => {
+        calendarEvents = events;
+        options = {
+          ...options,
+          events: calendarEvents,
+        };
+
+        // Check for event ID in URL and open it
+        const eventIdFromUrl = getEventIdFromUrl();
+        if (eventIdFromUrl) {
+          openEventById(eventIdFromUrl);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching events:", error);
+      });
 
     // Show welcome modal if no profile exists
     if (!$userProfile.name && !$userProfile.email) {
       showWelcomeModal = true;
     }
+
+    // Listen for browser back/forward navigation
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
   });
 </script>
 
@@ -269,16 +344,14 @@
   {#if showModal && selectedEvent}
     <EventModal
       event={selectedEvent}
-      onClose={() => {
-        showModal = false;
-        selectedEvent = null;
-      }}
+      onClose={closeModal}
       onEdit={handleEditEvent}
       on:duplicate={({ detail }) => {
         const duplicated = prepareDuplicatedEvent(detail.event);
         selectedEvent = duplicated;
         isEditMode = false;
         showModal = false;
+        updateUrlWithEvent(null);
         showEventForm = true;
       }}
       on:delete={async ({ detail }) => {
@@ -288,8 +361,7 @@
             options.events = options.events.filter(
               (e) => e.id !== detail.event.id
             );
-            showModal = false;
-            selectedEvent = null;
+            closeModal();
           } catch (error) {
             console.error("Error deleting event:", error);
             alert("Error deleting event. Please try again.");
