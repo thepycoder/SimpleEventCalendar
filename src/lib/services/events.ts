@@ -1,14 +1,15 @@
 import { db } from '$lib/firebase';
 import type { CalendarEvent } from '$lib/types/calendar';
-import { 
-  collection, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  query, 
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
   getDocs,
-  Timestamp 
+  getDoc,
+  Timestamp
 } from 'firebase/firestore';
 
 const EVENTS_COLLECTION = 'events';
@@ -72,13 +73,27 @@ function convertToFirestore(event: Partial<CalendarEvent>) {
 export async function fetchEvents(): Promise<CalendarEvent[]> {
   const eventsQuery = query(collection(db, EVENTS_COLLECTION));
   const querySnapshot = await getDocs(eventsQuery);
-  
+
   return querySnapshot.docs.map(doc => ({
     ...convertFromFirestore({
       id: doc.id,
       ...doc.data()
     })
   }));
+}
+
+export async function fetchEventById(eventId: string): Promise<CalendarEvent | null> {
+  const eventRef = doc(db, EVENTS_COLLECTION, eventId);
+  const eventSnap = await getDoc(eventRef);
+
+  if (!eventSnap.exists()) {
+    return null;
+  }
+
+  return convertFromFirestore({
+    id: eventSnap.id,
+    ...eventSnap.data()
+  });
 }
 
 export async function createEvent(event: Omit<CalendarEvent, 'id'>): Promise<CalendarEvent> {
