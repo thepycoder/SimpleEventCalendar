@@ -232,6 +232,7 @@
       selectedEvent = event;
       showModal = true;
       updateUrlWithEvent(eventId);
+      options = { ...options, date: event.start };
       return;
     }
     // If not found locally, fetch from Firestore
@@ -240,6 +241,7 @@
         selectedEvent = event;
         showModal = true;
         updateUrlWithEvent(eventId);
+        options = { ...options, date: event.start };
       } else {
         console.warn("Event not found:", eventId);
         // Clear the invalid event ID from URL
